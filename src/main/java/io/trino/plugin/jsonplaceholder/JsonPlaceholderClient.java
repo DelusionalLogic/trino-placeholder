@@ -27,9 +27,11 @@ import static java.util.Objects.requireNonNull;
 public class JsonPlaceholderClient
 {
     private static final String SCHEMA_NAME = "default";
-    private static final String TABLE_NAME = "posts";
+    private static final String POSTS_TABLE_NAME = "posts";
+    private static final String COMMENTS_TABLE_NAME = "comments";
 
     private final JsonPlaceholderTable postsTable;
+    private final JsonPlaceholderTable commentsTable;
 
     @Inject
     public JsonPlaceholderClient(JsonPlaceholderConfig config)
@@ -40,13 +42,30 @@ public class JsonPlaceholderClient
 
         // Hardcode the posts table structure
         this.postsTable = new JsonPlaceholderTable(
-                TABLE_NAME,
+                POSTS_TABLE_NAME,
                 ImmutableList.of(
                         new JsonPlaceholderColumn("userid", BIGINT),
                         new JsonPlaceholderColumn("id", BIGINT),
                         new JsonPlaceholderColumn("title", createUnboundedVarcharType()),
                         new JsonPlaceholderColumn("body", createUnboundedVarcharType())),
                 ImmutableList.of(apiBaseUri.resolve("/posts")));
+
+        // Hardcode the comments table structure with URI template
+        // Note: We use a placeholder string that will be replaced at split time
+        String baseUriString = apiBaseUri.toString();
+        // Remove trailing slash if present to avoid double slashes
+        if (baseUriString.endsWith("/")) {
+            baseUriString = baseUriString.substring(0, baseUriString.length() - 1);
+        }
+        this.commentsTable = new JsonPlaceholderTable(
+                COMMENTS_TABLE_NAME,
+                ImmutableList.of(
+                        new JsonPlaceholderColumn("postid", BIGINT),
+                        new JsonPlaceholderColumn("id", BIGINT),
+                        new JsonPlaceholderColumn("name", createUnboundedVarcharType()),
+                        new JsonPlaceholderColumn("email", createUnboundedVarcharType()),
+                        new JsonPlaceholderColumn("body", createUnboundedVarcharType())),
+                ImmutableList.of(URI.create(baseUriString + "/posts/__POSTID__/comments")));
     }
 
     public Set<String> getSchemaNames()
@@ -60,15 +79,21 @@ public class JsonPlaceholderClient
         if (!SCHEMA_NAME.equals(schema)) {
             return ImmutableSet.of();
         }
-        return ImmutableSet.of(TABLE_NAME);
+        return ImmutableSet.of(POSTS_TABLE_NAME, COMMENTS_TABLE_NAME);
     }
 
     public JsonPlaceholderTable getTable(String schema, String tableName)
     {
         requireNonNull(schema, "schema is null");
         requireNonNull(tableName, "tableName is null");
-        if (SCHEMA_NAME.equals(schema) && TABLE_NAME.equals(tableName)) {
+        if (!SCHEMA_NAME.equals(schema)) {
+            return null;
+        }
+        if (POSTS_TABLE_NAME.equals(tableName)) {
             return postsTable;
+        }
+        if (COMMENTS_TABLE_NAME.equals(tableName)) {
+            return commentsTable;
         }
         return null;
     }

@@ -22,6 +22,7 @@ import io.trino.spi.connector.ConnectorTableMetadata;
 import io.trino.spi.connector.SaveMode;
 import io.trino.spi.connector.SchemaTableName;
 import io.trino.spi.connector.TableNotFoundException;
+import io.trino.spi.predicate.TupleDomain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -39,7 +40,7 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_METHOD;
 @TestInstance(PER_METHOD)
 public class TestJsonPlaceholderMetadata
 {
-    private static final JsonPlaceholderTableHandle POSTS_TABLE_HANDLE = new JsonPlaceholderTableHandle("default", "posts");
+    private static final JsonPlaceholderTableHandle POSTS_TABLE_HANDLE = new JsonPlaceholderTableHandle("default", "posts", TupleDomain.all());
     private JsonPlaceholderMetadata metadata;
 
     @BeforeEach
@@ -77,10 +78,10 @@ public class TestJsonPlaceholderMetadata
                 "body", new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType(), 3)));
 
         // unknown table
-        assertThatThrownBy(() -> metadata.getColumnHandles(SESSION, new JsonPlaceholderTableHandle("unknown", "unknown")))
+        assertThatThrownBy(() -> metadata.getColumnHandles(SESSION, new JsonPlaceholderTableHandle("unknown", "unknown", TupleDomain.all())))
                 .isInstanceOf(TableNotFoundException.class)
                 .hasMessage("Table 'unknown.unknown' not found");
-        assertThatThrownBy(() -> metadata.getColumnHandles(SESSION, new JsonPlaceholderTableHandle("default", "unknown")))
+        assertThatThrownBy(() -> metadata.getColumnHandles(SESSION, new JsonPlaceholderTableHandle("default", "unknown", TupleDomain.all())))
                 .isInstanceOf(TableNotFoundException.class)
                 .hasMessage("Table 'default.unknown' not found");
     }
@@ -98,9 +99,9 @@ public class TestJsonPlaceholderMetadata
                 new ColumnMetadata("body", createUnboundedVarcharType())));
 
         // unknown tables should produce null
-        assertThat(metadata.getTableMetadata(SESSION, new JsonPlaceholderTableHandle("unknown", "unknown"))).isNull();
-        assertThat(metadata.getTableMetadata(SESSION, new JsonPlaceholderTableHandle("default", "unknown"))).isNull();
-        assertThat(metadata.getTableMetadata(SESSION, new JsonPlaceholderTableHandle("unknown", "posts"))).isNull();
+        assertThat(metadata.getTableMetadata(SESSION, new JsonPlaceholderTableHandle("unknown", "unknown", TupleDomain.all()))).isNull();
+        assertThat(metadata.getTableMetadata(SESSION, new JsonPlaceholderTableHandle("default", "unknown", TupleDomain.all()))).isNull();
+        assertThat(metadata.getTableMetadata(SESSION, new JsonPlaceholderTableHandle("unknown", "posts", TupleDomain.all()))).isNull();
     }
 
     @Test
@@ -108,11 +109,13 @@ public class TestJsonPlaceholderMetadata
     {
         // all schemas
         assertThat(ImmutableSet.copyOf(metadata.listTables(SESSION, Optional.empty()))).isEqualTo(ImmutableSet.of(
-                new SchemaTableName("default", "posts")));
+                new SchemaTableName("default", "posts"),
+                new SchemaTableName("default", "comments")));
 
         // specific schema
         assertThat(ImmutableSet.copyOf(metadata.listTables(SESSION, Optional.of("default")))).isEqualTo(ImmutableSet.of(
-                new SchemaTableName("default", "posts")));
+                new SchemaTableName("default", "posts"),
+                new SchemaTableName("default", "comments")));
 
         // unknown schema
         assertThat(ImmutableSet.copyOf(metadata.listTables(SESSION, Optional.of("unknown")))).isEqualTo(ImmutableSet.of());

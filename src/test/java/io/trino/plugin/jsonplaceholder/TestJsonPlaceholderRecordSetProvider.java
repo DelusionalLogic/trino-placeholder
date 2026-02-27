@@ -18,6 +18,7 @@ import com.google.common.collect.ImmutableMap;
 import io.trino.spi.connector.ConnectorTableHandle;
 import io.trino.spi.connector.RecordCursor;
 import io.trino.spi.connector.RecordSet;
+import io.trino.spi.predicate.TupleDomain;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,7 @@ public class TestJsonPlaceholderRecordSetProvider
     @Test
     public void testGetRecordSet()
     {
-        ConnectorTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "posts");
+        ConnectorTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "posts", TupleDomain.all());
         JsonPlaceholderRecordSetProvider recordSetProvider = new JsonPlaceholderRecordSetProvider();
         RecordSet recordSet = recordSetProvider.getRecordSet(JsonPlaceholderTransactionHandle.INSTANCE, SESSION, new JsonPlaceholderSplit(dataUri), tableHandle, ImmutableList.of(
                 new JsonPlaceholderColumnHandle("id", BIGINT, 1),

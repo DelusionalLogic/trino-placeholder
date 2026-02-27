@@ -78,11 +78,22 @@ public class JsonPlaceholderHttpServer
         protected void doGet(HttpServletRequest request, HttpServletResponse response)
                 throws IOException
         {
-            URL dataUrl = Resources.getResource(TestJsonPlaceholderClient.class, request.getPathInfo());
-            // Set content type for JSON responses
-            if (request.getPathInfo().endsWith(".json") || request.getPathInfo().equals("/posts")) {
-                response.setContentType("application/json");
+            String pathInfo = request.getPathInfo();
+
+            // Map request paths to data files
+            // /posts -> /jsonplaceholder-data/posts.json
+            // /posts/1/comments -> /jsonplaceholder-data/posts/1/comments.json
+            String dataPath = pathInfo;
+            if (pathInfo.equals("/posts")) {
+                dataPath = "/jsonplaceholder-data/posts.json";
             }
+            else if (pathInfo.matches("/posts/\\d+/comments")) {
+                // Already in the right format
+                dataPath = "/jsonplaceholder-data" + pathInfo + ".json";
+            }
+
+            URL dataUrl = Resources.getResource(TestJsonPlaceholderClient.class, dataPath);
+            response.setContentType("application/json");
             Resources.asByteSource(dataUrl).copyTo(response.getOutputStream());
         }
     }

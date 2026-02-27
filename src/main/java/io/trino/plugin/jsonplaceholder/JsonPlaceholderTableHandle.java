@@ -15,8 +15,10 @@ package io.trino.plugin.jsonplaceholder;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.trino.spi.connector.ColumnHandle;
 import io.trino.spi.connector.ConnectorTableHandle;
 import io.trino.spi.connector.SchemaTableName;
+import io.trino.spi.predicate.TupleDomain;
 
 import java.util.Objects;
 
@@ -27,14 +29,17 @@ public final class JsonPlaceholderTableHandle
 {
     private final String schemaName;
     private final String tableName;
+    private final TupleDomain<ColumnHandle> constraint;
 
     @JsonCreator
     public JsonPlaceholderTableHandle(
             @JsonProperty("schemaName") String schemaName,
-            @JsonProperty("tableName") String tableName)
+            @JsonProperty("tableName") String tableName,
+            @JsonProperty("constraint") TupleDomain<ColumnHandle> constraint)
     {
         this.schemaName = requireNonNull(schemaName, "schemaName is null");
         this.tableName = requireNonNull(tableName, "tableName is null");
+        this.constraint = requireNonNull(constraint, "constraint is null");
     }
 
     @JsonProperty
@@ -49,6 +54,12 @@ public final class JsonPlaceholderTableHandle
         return tableName;
     }
 
+    @JsonProperty
+    public TupleDomain<ColumnHandle> getConstraint()
+    {
+        return constraint;
+    }
+
     public SchemaTableName toSchemaTableName()
     {
         return new SchemaTableName(schemaName, tableName);
@@ -57,7 +68,7 @@ public final class JsonPlaceholderTableHandle
     @Override
     public int hashCode()
     {
-        return Objects.hash(schemaName, tableName);
+        return Objects.hash(schemaName, tableName, constraint);
     }
 
     @Override
@@ -72,12 +83,13 @@ public final class JsonPlaceholderTableHandle
 
         JsonPlaceholderTableHandle other = (JsonPlaceholderTableHandle) obj;
         return Objects.equals(this.schemaName, other.schemaName) &&
-                Objects.equals(this.tableName, other.tableName);
+                Objects.equals(this.tableName, other.tableName) &&
+                Objects.equals(this.constraint, other.constraint);
     }
 
     @Override
     public String toString()
     {
-        return schemaName + ":" + tableName;
+        return schemaName + ":" + tableName + ":" + constraint;
     }
 }

@@ -17,6 +17,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
+import io.trino.plugin.jsonplaceholder.filter.CommentsFilterApplier;
+import io.trino.plugin.jsonplaceholder.filter.FilterApplier;
 import io.trino.spi.TrinoException;
 import io.trino.spi.connector.ColumnHandle;
 import io.trino.spi.connector.ColumnMetadata;
@@ -25,10 +27,13 @@ import io.trino.spi.connector.ConnectorSession;
 import io.trino.spi.connector.ConnectorTableHandle;
 import io.trino.spi.connector.ConnectorTableMetadata;
 import io.trino.spi.connector.ConnectorTableVersion;
+import io.trino.spi.connector.Constraint;
+import io.trino.spi.connector.ConstraintApplicationResult;
 import io.trino.spi.connector.SchemaTableName;
 import io.trino.spi.connector.SchemaTablePrefix;
 import io.trino.spi.connector.TableColumnsMetadata;
 import io.trino.spi.connector.TableNotFoundException;
+import io.trino.spi.predicate.TupleDomain;
 
 import java.util.Iterator;
 import java.util.List;
@@ -43,11 +48,13 @@ public class JsonPlaceholderMetadata
         implements ConnectorMetadata
 {
     private final JsonPlaceholderClient exampleClient;
+    private final Map<String, FilterApplier> filterAppliers;
 
     @Inject
     public JsonPlaceholderMetadata(JsonPlaceholderClient exampleClient)
     {
         this.exampleClient = requireNonNull(exampleClient, "exampleClient is null");
+        this.filterAppliers = ImmutableMap.of("comments", new CommentsFilterApplier());
     }
 
     @Override
@@ -77,7 +84,7 @@ public class JsonPlaceholderMetadata
             return null;
         }
 
-        return new JsonPlaceholderTableHandle(tableName.getSchemaName(), tableName.getTableName());
+        return new JsonPlaceholderTableHandle(tableName.getSchemaName(), tableName.getTableName(), TupleDomain.all());
     }
 
     @Override
@@ -162,5 +169,22 @@ public class JsonPlaceholderMetadata
     public ColumnMetadata getColumnMetadata(ConnectorSession session, ConnectorTableHandle tableHandle, ColumnHandle columnHandle)
     {
         return ((JsonPlaceholderColumnHandle) columnHandle).getColumnMetadata();
+    }
+
+    @Override
+    public Optional<ConstraintApplicationResult<ConnectorTableHandle>> applyFilter(
+            ConnectorSession session,
+            ConnectorTableHandle handle,
+            Constraint constraint)
+    {
+        JsonPlaceholderTableHandle tableHandle = (JsonPlaceholderTableHandle) handle;
+        FilterApplier filterApplier = filterAppliers.get(tableHandle.getTableName());
+
+        if (filterApplier == null) {
+            return Optional.empty();
+        }
+
+        Map<String, ColumnHandle> columns = getColumnHandles(session, handle);
+        return filterApplier.applyFilter(tableHandle, columns, constraint);
     }
 }

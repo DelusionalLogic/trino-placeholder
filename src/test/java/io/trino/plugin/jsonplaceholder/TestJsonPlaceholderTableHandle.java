@@ -15,6 +15,7 @@ package io.trino.plugin.jsonplaceholder;
 
 import io.airlift.json.JsonCodec;
 import io.airlift.testing.EquivalenceTester;
+import io.trino.spi.predicate.TupleDomain;
 import org.junit.jupiter.api.Test;
 
 import static io.airlift.json.JsonCodec.jsonCodec;
@@ -22,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class TestJsonPlaceholderTableHandle
 {
-    private final JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("schemaName", "tableName");
+    private final JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("schemaName", "tableName", TupleDomain.all());
 
     @Test
     public void testJsonRoundTrip()
@@ -37,9 +38,9 @@ public class TestJsonPlaceholderTableHandle
     public void testEquivalence()
     {
         EquivalenceTester.equivalenceTester()
-                .addEquivalentGroup(new JsonPlaceholderTableHandle("schema", "table"), new JsonPlaceholderTableHandle("schema", "table"))
-                .addEquivalentGroup(new JsonPlaceholderTableHandle("schemaX", "table"), new JsonPlaceholderTableHandle("schemaX", "table"))
-                .addEquivalentGroup(new JsonPlaceholderTableHandle("schema", "tableX"), new JsonPlaceholderTableHandle("schema", "tableX"))
+                .addEquivalentGroup(new JsonPlaceholderTableHandle("schema", "table", TupleDomain.all()), new JsonPlaceholderTableHandle("schema", "table", TupleDomain.all()))
+                .addEquivalentGroup(new JsonPlaceholderTableHandle("schemaX", "table", TupleDomain.all()), new JsonPlaceholderTableHandle("schemaX", "table", TupleDomain.all()))
+                .addEquivalentGroup(new JsonPlaceholderTableHandle("schema", "tableX", TupleDomain.all()), new JsonPlaceholderTableHandle("schema", "tableX", TupleDomain.all()))
                 .check();
     }
 }

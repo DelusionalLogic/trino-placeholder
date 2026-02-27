@@ -36,7 +36,7 @@ public class TestJsonPlaceholderClient
         assertThat(client.getSchemaNames()).isEqualTo(ImmutableSet.of("default"));
 
         // Test table discovery in default schema
-        assertThat(client.getTableNames("default")).isEqualTo(ImmutableSet.of("posts"));
+        assertThat(client.getTableNames("default")).isEqualTo(ImmutableSet.of("posts", "comments"));
 
         // Test table discovery in unknown schema
         assertThat(client.getTableNames("unknown")).isEqualTo(ImmutableSet.of());

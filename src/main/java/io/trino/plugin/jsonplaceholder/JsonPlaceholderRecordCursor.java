@@ -112,6 +112,9 @@ public class JsonPlaceholderRecordCursor
         if ("userid".equals(columnName)) {
             jsonFieldName = "userId";
         }
+        else if ("postid".equals(columnName)) {
+            jsonFieldName = "postId";
+        }
 
         return currentPost.get(jsonFieldName);
     }
