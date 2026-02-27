@@ -27,8 +27,10 @@ import io.trino.spi.connector.ConnectorTableMetadata;
 import io.trino.spi.connector.ConnectorTableVersion;
 import io.trino.spi.connector.SchemaTableName;
 import io.trino.spi.connector.SchemaTablePrefix;
+import io.trino.spi.connector.TableColumnsMetadata;
 import io.trino.spi.connector.TableNotFoundException;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -119,18 +121,19 @@ public class ExampleMetadata
     }
 
     @Override
-    public Map<SchemaTableName, List<ColumnMetadata>> listTableColumns(ConnectorSession session, SchemaTablePrefix prefix)
+    public Iterator<TableColumnsMetadata> streamTableColumns(ConnectorSession session, SchemaTablePrefix prefix)
     {
         requireNonNull(prefix, "prefix is null");
-        ImmutableMap.Builder<SchemaTableName, List<ColumnMetadata>> columns = ImmutableMap.builder();
-        for (SchemaTableName tableName : listTables(session, prefix)) {
-            ConnectorTableMetadata tableMetadata = getTableMetadata(tableName);
-            // table can disappear during listing operation
-            if (tableMetadata != null) {
-                columns.put(tableName, tableMetadata.getColumns());
-            }
-        }
-        return columns.buildOrThrow();
+        return listTables(session, prefix).stream()
+                .map(tableName -> {
+                    ConnectorTableMetadata tableMetadata = getTableMetadata(tableName);
+                    // table can disappear during listing operation
+                    if (tableMetadata != null) {
+                        return TableColumnsMetadata.forTable(tableName, tableMetadata.getColumns());
+                    }
+                    return TableColumnsMetadata.forRedirectedTable(tableName);
+                })
+                .iterator();
     }
 
     private ConnectorTableMetadata getTableMetadata(SchemaTableName tableName)
