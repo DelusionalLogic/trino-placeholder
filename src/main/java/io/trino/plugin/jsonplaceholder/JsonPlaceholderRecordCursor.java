@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -35,12 +35,12 @@ import static io.trino.spi.type.DoubleType.DOUBLE;
 import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class ExampleRecordCursor
+public class JsonPlaceholderRecordCursor
         implements RecordCursor
 {
     private static final Splitter LINE_SPLITTER = Splitter.on(",").trimResults();
 
-    private final List<ExampleColumnHandle> columnHandles;
+    private final List<JsonPlaceholderColumnHandle> columnHandles;
     private final int[] fieldToColumnIndex;
 
     private final Iterator<String> lines;
@@ -48,13 +48,13 @@ public class ExampleRecordCursor
 
     private List<String> fields;
 
-    public ExampleRecordCursor(List<ExampleColumnHandle> columnHandles, ByteSource byteSource)
+    public JsonPlaceholderRecordCursor(List<JsonPlaceholderColumnHandle> columnHandles, ByteSource byteSource)
     {
         this.columnHandles = columnHandles;
 
         fieldToColumnIndex = new int[columnHandles.size()];
         for (int i = 0; i < columnHandles.size(); i++) {
-            ExampleColumnHandle columnHandle = columnHandles.get(i);
+            JsonPlaceholderColumnHandle columnHandle = columnHandles.get(i);
             fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
         }
 

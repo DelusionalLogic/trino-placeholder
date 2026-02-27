@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import io.airlift.json.JsonCodec;
 import io.airlift.testing.EquivalenceTester;
@@ -20,16 +20,16 @@ import org.junit.jupiter.api.Test;
 import static io.airlift.json.JsonCodec.jsonCodec;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TestExampleTableHandle
+public class TestJsonPlaceholderTableHandle
 {
-    private final ExampleTableHandle tableHandle = new ExampleTableHandle("schemaName", "tableName");
+    private final JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("schemaName", "tableName");
 
     @Test
     public void testJsonRoundTrip()
     {
-        JsonCodec<ExampleTableHandle> codec = jsonCodec(ExampleTableHandle.class);
+        JsonCodec<JsonPlaceholderTableHandle> codec = jsonCodec(JsonPlaceholderTableHandle.class);
         String json = codec.toJson(tableHandle);
-        ExampleTableHandle copy = codec.fromJson(json);
+        JsonPlaceholderTableHandle copy = codec.fromJson(json);
         assertThat(copy).isEqualTo(tableHandle);
     }
 
@@ -37,9 +37,9 @@ public class TestExampleTableHandle
     public void testEquivalence()
     {
         EquivalenceTester.equivalenceTester()
-                .addEquivalentGroup(new ExampleTableHandle("schema", "table"), new ExampleTableHandle("schema", "table"))
-                .addEquivalentGroup(new ExampleTableHandle("schemaX", "table"), new ExampleTableHandle("schemaX", "table"))
-                .addEquivalentGroup(new ExampleTableHandle("schema", "tableX"), new ExampleTableHandle("schema", "tableX"))
+                .addEquivalentGroup(new JsonPlaceholderTableHandle("schema", "table"), new JsonPlaceholderTableHandle("schema", "table"))
+                .addEquivalentGroup(new JsonPlaceholderTableHandle("schemaX", "table"), new JsonPlaceholderTableHandle("schemaX", "table"))
+                .addEquivalentGroup(new JsonPlaceholderTableHandle("schema", "tableX"), new JsonPlaceholderTableHandle("schema", "tableX"))
                 .check();
     }
 }

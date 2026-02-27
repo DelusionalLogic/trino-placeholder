@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
@@ -26,20 +26,20 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
-public class ExampleRecordSet
+public class JsonPlaceholderRecordSet
         implements RecordSet
 {
-    private final List<ExampleColumnHandle> columnHandles;
+    private final List<JsonPlaceholderColumnHandle> columnHandles;
     private final List<Type> columnTypes;
     private final ByteSource byteSource;
 
-    public ExampleRecordSet(ExampleSplit split, List<ExampleColumnHandle> columnHandles)
+    public JsonPlaceholderRecordSet(JsonPlaceholderSplit split, List<JsonPlaceholderColumnHandle> columnHandles)
     {
         requireNonNull(split, "split is null");
 
         this.columnHandles = requireNonNull(columnHandles, "columnHandles is null");
         ImmutableList.Builder<Type> types = ImmutableList.builder();
-        for (ExampleColumnHandle column : columnHandles) {
+        for (JsonPlaceholderColumnHandle column : columnHandles) {
             types.add(column.getColumnType());
         }
         this.columnTypes = types.build();
@@ -61,6 +61,6 @@ public class ExampleRecordSet
     @Override
     public RecordCursor cursor()
     {
-        return new ExampleRecordCursor(columnHandles, byteSource);
+        return new JsonPlaceholderRecordCursor(columnHandles, byteSource);
     }
 }

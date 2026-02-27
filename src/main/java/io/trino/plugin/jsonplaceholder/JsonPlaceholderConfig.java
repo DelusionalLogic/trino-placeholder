@@ -11,14 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import io.airlift.configuration.Config;
 import jakarta.validation.constraints.NotNull;
 
 import java.net.URI;
 
-public class ExampleConfig
+public class JsonPlaceholderConfig
 {
     private URI metadata;
 
@@ -29,7 +29,7 @@ public class ExampleConfig
     }
 
     @Config("metadata-uri")
-    public ExampleConfig setMetadata(URI metadata)
+    public JsonPlaceholderConfig setMetadata(URI metadata)
     {
         this.metadata = metadata;
         return this;

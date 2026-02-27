@@ -11,11 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import io.trino.spi.connector.ConnectorTransactionHandle;
 
-public enum ExampleTransactionHandle
+public enum JsonPlaceholderTransactionHandle
         implements ConnectorTransactionHandle
 {
     INSTANCE

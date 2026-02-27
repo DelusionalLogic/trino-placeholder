@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.collect.ImmutableList;
 import io.trino.spi.connector.ColumnMetadata;
@@ -19,15 +19,15 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 
-import static io.trino.plugin.example.MetadataUtil.TABLE_CODEC;
+import static io.trino.plugin.jsonplaceholder.MetadataUtil.TABLE_CODEC;
 import static io.trino.spi.type.BigintType.BIGINT;
 import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TestExampleTable
+public class TestJsonPlaceholderTable
 {
-    private final ExampleTable exampleTable = new ExampleTable("tableName",
-            ImmutableList.of(new ExampleColumn("a", createUnboundedVarcharType()), new ExampleColumn("b", BIGINT)),
+    private final JsonPlaceholderTable exampleTable = new JsonPlaceholderTable("tableName",
+            ImmutableList.of(new JsonPlaceholderColumn("a", createUnboundedVarcharType()), new JsonPlaceholderColumn("b", BIGINT)),
             ImmutableList.of(URI.create("file://table-1.json"), URI.create("file://table-2.json")));
 
     @Test
@@ -42,7 +42,7 @@ public class TestExampleTable
     public void testRoundTrip()
     {
         String json = TABLE_CODEC.toJson(exampleTable);
-        ExampleTable exampleTableCopy = TABLE_CODEC.fromJson(json);
+        JsonPlaceholderTable exampleTableCopy = TABLE_CODEC.fromJson(json);
 
         assertThat(exampleTableCopy.getName()).isEqualTo(exampleTable.getName());
         assertThat(exampleTableCopy.getColumns()).isEqualTo(exampleTable.getColumns());

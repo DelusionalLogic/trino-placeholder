@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,13 +23,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Objects.requireNonNull;
 
-public final class ExampleColumn
+public final class JsonPlaceholderColumn
 {
     private final String name;
     private final Type type;
 
     @JsonCreator
-    public ExampleColumn(
+    public JsonPlaceholderColumn(
             @JsonProperty("name") String name,
             @JsonProperty("type") Type type)
     {
@@ -66,7 +66,7 @@ public final class ExampleColumn
             return false;
         }
 
-        ExampleColumn other = (ExampleColumn) obj;
+        JsonPlaceholderColumn other = (JsonPlaceholderColumn) obj;
         return Objects.equals(this.name, other.name) &&
                 Objects.equals(this.type, other.type);
     }

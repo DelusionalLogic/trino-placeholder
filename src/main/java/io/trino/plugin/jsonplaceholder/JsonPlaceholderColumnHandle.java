@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,7 +22,7 @@ import io.trino.spi.type.Type;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static java.util.Objects.requireNonNull;
 
-public final class ExampleColumnHandle
+public final class JsonPlaceholderColumnHandle
         implements ColumnHandle
 {
     private final String columnName;
@@ -30,7 +30,7 @@ public final class ExampleColumnHandle
     private final int ordinalPosition;
 
     @JsonCreator
-    public ExampleColumnHandle(
+    public JsonPlaceholderColumnHandle(
             @JsonProperty("columnName") String columnName,
             @JsonProperty("columnType") Type columnType,
             @JsonProperty("ordinalPosition") int ordinalPosition)
@@ -79,7 +79,7 @@ public final class ExampleColumnHandle
             return false;
         }
 
-        ExampleColumnHandle other = (ExampleColumnHandle) obj;
+        JsonPlaceholderColumnHandle other = (JsonPlaceholderColumnHandle) obj;
         return columnName.equals(other.columnName);
     }
 

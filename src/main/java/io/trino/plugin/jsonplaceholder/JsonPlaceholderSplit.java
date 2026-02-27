@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,17 +28,17 @@ import static io.airlift.slice.SizeOf.instanceSize;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
-public class ExampleSplit
+public class JsonPlaceholderSplit
         implements ConnectorSplit
 {
-    private static final int INSTANCE_SIZE = instanceSize(ExampleSplit.class);
+    private static final int INSTANCE_SIZE = instanceSize(JsonPlaceholderSplit.class);
 
     private final String uri;
     private final boolean remotelyAccessible;
     private final List<HostAddress> addresses;
 
     @JsonCreator
-    public ExampleSplit(@JsonProperty("uri") String uri)
+    public JsonPlaceholderSplit(@JsonProperty("uri") String uri)
     {
         this.uri = requireNonNull(uri, "uri is null");
 

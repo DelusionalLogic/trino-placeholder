@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.inject.Inject;
 import io.airlift.bootstrap.LifeCycleManager;
@@ -23,23 +23,23 @@ import io.trino.spi.connector.ConnectorSplitManager;
 import io.trino.spi.connector.ConnectorTransactionHandle;
 import io.trino.spi.transaction.IsolationLevel;
 
-import static io.trino.plugin.example.ExampleTransactionHandle.INSTANCE;
+import static io.trino.plugin.jsonplaceholder.JsonPlaceholderTransactionHandle.INSTANCE;
 import static java.util.Objects.requireNonNull;
 
-public class ExampleConnector
+public class JsonPlaceholderConnector
         implements Connector
 {
     private final LifeCycleManager lifeCycleManager;
-    private final ExampleMetadata metadata;
-    private final ExampleSplitManager splitManager;
-    private final ExampleRecordSetProvider recordSetProvider;
+    private final JsonPlaceholderMetadata metadata;
+    private final JsonPlaceholderSplitManager splitManager;
+    private final JsonPlaceholderRecordSetProvider recordSetProvider;
 
     @Inject
-    public ExampleConnector(
+    public JsonPlaceholderConnector(
             LifeCycleManager lifeCycleManager,
-            ExampleMetadata metadata,
-            ExampleSplitManager splitManager,
-            ExampleRecordSetProvider recordSetProvider)
+            JsonPlaceholderMetadata metadata,
+            JsonPlaceholderSplitManager splitManager,
+            JsonPlaceholderRecordSetProvider recordSetProvider)
     {
         this.lifeCycleManager = requireNonNull(lifeCycleManager, "lifeCycleManager is null");
         this.metadata = requireNonNull(metadata, "metadata is null");

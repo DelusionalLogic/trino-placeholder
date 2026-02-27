@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.inject.Inject;
 import io.trino.spi.connector.ConnectorSession;
@@ -32,13 +32,13 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
-public class ExampleSplitManager
+public class JsonPlaceholderSplitManager
         implements ConnectorSplitManager
 {
-    private final ExampleClient exampleClient;
+    private final JsonPlaceholderClient exampleClient;
 
     @Inject
-    public ExampleSplitManager(ExampleClient exampleClient)
+    public JsonPlaceholderSplitManager(JsonPlaceholderClient exampleClient)
     {
         this.exampleClient = requireNonNull(exampleClient, "exampleClient is null");
     }
@@ -51,8 +51,8 @@ public class ExampleSplitManager
             DynamicFilter dynamicFilter,
             Constraint constraint)
     {
-        ExampleTableHandle tableHandle = (ExampleTableHandle) connectorTableHandle;
-        ExampleTable table = exampleClient.getTable(tableHandle.getSchemaName(), tableHandle.getTableName());
+        JsonPlaceholderTableHandle tableHandle = (JsonPlaceholderTableHandle) connectorTableHandle;
+        JsonPlaceholderTable table = exampleClient.getTable(tableHandle.getSchemaName(), tableHandle.getTableName());
 
         // this can happen if table is removed during a query
         if (table == null) {
@@ -61,7 +61,7 @@ public class ExampleSplitManager
 
         List<ConnectorSplit> splits = new ArrayList<>();
         for (URI uri : table.getSources()) {
-            splits.add(new ExampleSplit(uri.toString()));
+            splits.add(new JsonPlaceholderSplit(uri.toString()));
         }
         Collections.shuffle(splits);
 

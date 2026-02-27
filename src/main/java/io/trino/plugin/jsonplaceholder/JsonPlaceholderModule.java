@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
@@ -21,19 +21,19 @@ import static io.airlift.configuration.ConfigBinder.configBinder;
 import static io.airlift.json.JsonCodec.listJsonCodec;
 import static io.airlift.json.JsonCodecBinder.jsonCodecBinder;
 
-public class ExampleModule
+public class JsonPlaceholderModule
         implements Module
 {
     @Override
     public void configure(Binder binder)
     {
-        binder.bind(ExampleConnector.class).in(Scopes.SINGLETON);
-        binder.bind(ExampleMetadata.class).in(Scopes.SINGLETON);
-        binder.bind(ExampleClient.class).in(Scopes.SINGLETON);
-        binder.bind(ExampleSplitManager.class).in(Scopes.SINGLETON);
-        binder.bind(ExampleRecordSetProvider.class).in(Scopes.SINGLETON);
-        configBinder(binder).bindConfig(ExampleConfig.class);
+        binder.bind(JsonPlaceholderConnector.class).in(Scopes.SINGLETON);
+        binder.bind(JsonPlaceholderMetadata.class).in(Scopes.SINGLETON);
+        binder.bind(JsonPlaceholderClient.class).in(Scopes.SINGLETON);
+        binder.bind(JsonPlaceholderSplitManager.class).in(Scopes.SINGLETON);
+        binder.bind(JsonPlaceholderRecordSetProvider.class).in(Scopes.SINGLETON);
+        configBinder(binder).bindConfig(JsonPlaceholderConfig.class);
 
-        jsonCodecBinder(binder).bindMapJsonCodec(String.class, listJsonCodec(ExampleTable.class));
+        jsonCodecBinder(binder).bindMapJsonCodec(String.class, listJsonCodec(JsonPlaceholderTable.class));
     }
 }

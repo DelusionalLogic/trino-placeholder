@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.collect.ImmutableList;
 import io.trino.spi.connector.ColumnHandle;
@@ -24,19 +24,19 @@ import io.trino.spi.connector.RecordSet;
 
 import java.util.List;
 
-public class ExampleRecordSetProvider
+public class JsonPlaceholderRecordSetProvider
         implements ConnectorRecordSetProvider
 {
     @Override
     public RecordSet getRecordSet(ConnectorTransactionHandle transaction, ConnectorSession session, ConnectorSplit split, ConnectorTableHandle table, List<? extends ColumnHandle> columns)
     {
-        ExampleSplit exampleSplit = (ExampleSplit) split;
+        JsonPlaceholderSplit exampleSplit = (JsonPlaceholderSplit) split;
 
-        ImmutableList.Builder<ExampleColumnHandle> handles = ImmutableList.builder();
+        ImmutableList.Builder<JsonPlaceholderColumnHandle> handles = ImmutableList.builder();
         for (ColumnHandle handle : columns) {
-            handles.add((ExampleColumnHandle) handle);
+            handles.add((JsonPlaceholderColumnHandle) handle);
         }
 
-        return new ExampleRecordSet(exampleSplit, handles.build());
+        return new JsonPlaceholderRecordSet(exampleSplit, handles.build());
     }
 }

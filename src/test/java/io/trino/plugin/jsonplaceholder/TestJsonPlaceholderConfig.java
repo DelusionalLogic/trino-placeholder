@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
@@ -23,12 +23,12 @@ import static io.airlift.configuration.testing.ConfigAssertions.assertFullMappin
 import static io.airlift.configuration.testing.ConfigAssertions.assertRecordedDefaults;
 import static io.airlift.configuration.testing.ConfigAssertions.recordDefaults;
 
-public class TestExampleConfig
+public class TestJsonPlaceholderConfig
 {
     @Test
     public void testDefaults()
     {
-        assertRecordedDefaults(recordDefaults(ExampleConfig.class)
+        assertRecordedDefaults(recordDefaults(JsonPlaceholderConfig.class)
                 .setMetadata(null));
     }
 
@@ -37,7 +37,7 @@ public class TestExampleConfig
     {
         Map<String, String> properties = ImmutableMap.of("metadata-uri", "file://test.json");
 
-        ExampleConfig expected = new ExampleConfig()
+        JsonPlaceholderConfig expected = new JsonPlaceholderConfig()
                 .setMetadata(URI.create("file://test.json"));
 
         assertFullMapping(properties, expected);

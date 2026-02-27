@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,14 +22,14 @@ import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
-public final class ExampleTableHandle
+public final class JsonPlaceholderTableHandle
         implements ConnectorTableHandle
 {
     private final String schemaName;
     private final String tableName;
 
     @JsonCreator
-    public ExampleTableHandle(
+    public JsonPlaceholderTableHandle(
             @JsonProperty("schemaName") String schemaName,
             @JsonProperty("tableName") String tableName)
     {
@@ -70,7 +70,7 @@ public final class ExampleTableHandle
             return false;
         }
 
-        ExampleTableHandle other = (ExampleTableHandle) obj;
+        JsonPlaceholderTableHandle other = (JsonPlaceholderTableHandle) obj;
         return Objects.equals(this.schemaName, other.schemaName) &&
                 Objects.equals(this.tableName, other.tableName);
     }

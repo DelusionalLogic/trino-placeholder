@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,13 +39,13 @@ import java.util.Set;
 import static io.trino.spi.StandardErrorCode.NOT_SUPPORTED;
 import static java.util.Objects.requireNonNull;
 
-public class ExampleMetadata
+public class JsonPlaceholderMetadata
         implements ConnectorMetadata
 {
-    private final ExampleClient exampleClient;
+    private final JsonPlaceholderClient exampleClient;
 
     @Inject
-    public ExampleMetadata(ExampleClient exampleClient)
+    public JsonPlaceholderMetadata(JsonPlaceholderClient exampleClient)
     {
         this.exampleClient = requireNonNull(exampleClient, "exampleClient is null");
     }
@@ -62,7 +62,7 @@ public class ExampleMetadata
     }
 
     @Override
-    public ExampleTableHandle getTableHandle(ConnectorSession session, SchemaTableName tableName, Optional<ConnectorTableVersion> startVersion, Optional<ConnectorTableVersion> endVersion)
+    public JsonPlaceholderTableHandle getTableHandle(ConnectorSession session, SchemaTableName tableName, Optional<ConnectorTableVersion> startVersion, Optional<ConnectorTableVersion> endVersion)
     {
         if (startVersion.isPresent() || endVersion.isPresent()) {
             throw new TrinoException(NOT_SUPPORTED, "This connector does not support versioned tables");
@@ -72,18 +72,18 @@ public class ExampleMetadata
             return null;
         }
 
-        ExampleTable table = exampleClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+        JsonPlaceholderTable table = exampleClient.getTable(tableName.getSchemaName(), tableName.getTableName());
         if (table == null) {
             return null;
         }
 
-        return new ExampleTableHandle(tableName.getSchemaName(), tableName.getTableName());
+        return new JsonPlaceholderTableHandle(tableName.getSchemaName(), tableName.getTableName());
     }
 
     @Override
     public ConnectorTableMetadata getTableMetadata(ConnectorSession session, ConnectorTableHandle table)
     {
-        return getTableMetadata(((ExampleTableHandle) table).toSchemaTableName());
+        return getTableMetadata(((JsonPlaceholderTableHandle) table).toSchemaTableName());
     }
 
     @Override
@@ -104,9 +104,9 @@ public class ExampleMetadata
     @Override
     public Map<String, ColumnHandle> getColumnHandles(ConnectorSession session, ConnectorTableHandle tableHandle)
     {
-        ExampleTableHandle exampleTableHandle = (ExampleTableHandle) tableHandle;
+        JsonPlaceholderTableHandle exampleTableHandle = (JsonPlaceholderTableHandle) tableHandle;
 
-        ExampleTable table = exampleClient.getTable(exampleTableHandle.getSchemaName(), exampleTableHandle.getTableName());
+        JsonPlaceholderTable table = exampleClient.getTable(exampleTableHandle.getSchemaName(), exampleTableHandle.getTableName());
         if (table == null) {
             throw new TableNotFoundException(exampleTableHandle.toSchemaTableName());
         }
@@ -114,7 +114,7 @@ public class ExampleMetadata
         ImmutableMap.Builder<String, ColumnHandle> columnHandles = ImmutableMap.builder();
         int index = 0;
         for (ColumnMetadata column : table.getColumnsMetadata()) {
-            columnHandles.put(column.getName(), new ExampleColumnHandle(column.getName(), column.getType(), index));
+            columnHandles.put(column.getName(), new JsonPlaceholderColumnHandle(column.getName(), column.getType(), index));
             index++;
         }
         return columnHandles.buildOrThrow();
@@ -142,7 +142,7 @@ public class ExampleMetadata
             return null;
         }
 
-        ExampleTable table = exampleClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+        JsonPlaceholderTable table = exampleClient.getTable(tableName.getSchemaName(), tableName.getTableName());
         if (table == null) {
             return null;
         }
@@ -161,6 +161,6 @@ public class ExampleMetadata
     @Override
     public ColumnMetadata getColumnMetadata(ConnectorSession session, ConnectorTableHandle tableHandle, ColumnHandle columnHandle)
     {
-        return ((ExampleColumnHandle) columnHandle).getColumnMetadata();
+        return ((JsonPlaceholderColumnHandle) columnHandle).getColumnMetadata();
     }
 }

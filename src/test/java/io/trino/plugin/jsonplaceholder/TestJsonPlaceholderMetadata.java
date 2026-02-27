@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.TestInstance;
 import java.net.URL;
 import java.util.Optional;
 
-import static io.trino.plugin.example.MetadataUtil.CATALOG_CODEC;
+import static io.trino.plugin.jsonplaceholder.MetadataUtil.CATALOG_CODEC;
 import static io.trino.spi.type.BigintType.BIGINT;
 import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
 import static io.trino.testing.TestingConnectorSession.SESSION;
@@ -39,21 +39,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_METHOD;
 
 @TestInstance(PER_METHOD)
-public class TestExampleMetadata
+public class TestJsonPlaceholderMetadata
 {
-    private static final ExampleTableHandle NUMBERS_TABLE_HANDLE = new ExampleTableHandle("example", "numbers");
-    private ExampleMetadata metadata;
+    private static final JsonPlaceholderTableHandle NUMBERS_TABLE_HANDLE = new JsonPlaceholderTableHandle("example", "numbers");
+    private JsonPlaceholderMetadata metadata;
 
     @BeforeEach
     public void setUp()
             throws Exception
     {
-        URL metadataUrl = Resources.getResource(TestExampleClient.class, "/example-data/example-metadata.json");
+        URL metadataUrl = Resources.getResource(TestJsonPlaceholderClient.class, "/jsonplaceholder-data/example-metadata.json");
         assertThat(metadataUrl)
                 .describedAs("metadataUrl is null")
                 .isNotNull();
-        ExampleClient client = new ExampleClient(new ExampleConfig().setMetadata(metadataUrl.toURI()), CATALOG_CODEC);
-        metadata = new ExampleMetadata(client);
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setMetadata(metadataUrl.toURI()), CATALOG_CODEC);
+        metadata = new JsonPlaceholderMetadata(client);
     }
 
     @Test
@@ -76,14 +76,14 @@ public class TestExampleMetadata
     {
         // known table
         assertThat(metadata.getColumnHandles(SESSION, NUMBERS_TABLE_HANDLE)).isEqualTo(ImmutableMap.of(
-                "text", new ExampleColumnHandle("text", createUnboundedVarcharType(), 0),
-                "value", new ExampleColumnHandle("value", BIGINT, 1)));
+                "text", new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0),
+                "value", new JsonPlaceholderColumnHandle("value", BIGINT, 1)));
 
         // unknown table
-        assertThatThrownBy(() -> metadata.getColumnHandles(SESSION, new ExampleTableHandle("unknown", "unknown")))
+        assertThatThrownBy(() -> metadata.getColumnHandles(SESSION, new JsonPlaceholderTableHandle("unknown", "unknown")))
                 .isInstanceOf(TableNotFoundException.class)
                 .hasMessage("Table 'unknown.unknown' not found");
-        assertThatThrownBy(() -> metadata.getColumnHandles(SESSION, new ExampleTableHandle("example", "unknown")))
+        assertThatThrownBy(() -> metadata.getColumnHandles(SESSION, new JsonPlaceholderTableHandle("example", "unknown")))
                 .isInstanceOf(TableNotFoundException.class)
                 .hasMessage("Table 'example.unknown' not found");
     }
@@ -99,9 +99,9 @@ public class TestExampleMetadata
                 new ColumnMetadata("value", BIGINT)));
 
         // unknown tables should produce null
-        assertThat(metadata.getTableMetadata(SESSION, new ExampleTableHandle("unknown", "unknown"))).isNull();
-        assertThat(metadata.getTableMetadata(SESSION, new ExampleTableHandle("example", "unknown"))).isNull();
-        assertThat(metadata.getTableMetadata(SESSION, new ExampleTableHandle("unknown", "numbers"))).isNull();
+        assertThat(metadata.getTableMetadata(SESSION, new JsonPlaceholderTableHandle("unknown", "unknown"))).isNull();
+        assertThat(metadata.getTableMetadata(SESSION, new JsonPlaceholderTableHandle("example", "unknown"))).isNull();
+        assertThat(metadata.getTableMetadata(SESSION, new JsonPlaceholderTableHandle("unknown", "numbers"))).isNull();
     }
 
     @Test
@@ -127,11 +127,11 @@ public class TestExampleMetadata
     @Test
     public void getColumnMetadata()
     {
-        assertThat(metadata.getColumnMetadata(SESSION, NUMBERS_TABLE_HANDLE, new ExampleColumnHandle("text", createUnboundedVarcharType(), 0))).isEqualTo(new ColumnMetadata("text", createUnboundedVarcharType()));
+        assertThat(metadata.getColumnMetadata(SESSION, NUMBERS_TABLE_HANDLE, new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0))).isEqualTo(new ColumnMetadata("text", createUnboundedVarcharType()));
 
         // example connector assumes that the table handle and column handle are
         // properly formed, so it will return a metadata object for any
-        // ExampleTableHandle and ExampleColumnHandle passed in.  This is on because
+        // JsonPlaceholderTableHandle and JsonPlaceholderColumnHandle passed in.  This is on because
         // it is not possible for the Trino Metadata system to create the handles
         // directly.
     }

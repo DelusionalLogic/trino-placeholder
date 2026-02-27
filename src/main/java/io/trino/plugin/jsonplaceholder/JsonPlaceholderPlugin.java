@@ -11,18 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.collect.ImmutableList;
 import io.trino.spi.Plugin;
 import io.trino.spi.connector.ConnectorFactory;
 
-public class ExamplePlugin
+public class JsonPlaceholderPlugin
         implements Plugin
 {
     @Override
     public Iterable<ConnectorFactory> getConnectorFactories()
     {
-        return ImmutableList.of(new ExampleConnectorFactory());
+        return ImmutableList.of(new JsonPlaceholderConnectorFactory());
     }
 }

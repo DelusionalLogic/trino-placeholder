@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.io.Resources;
 import com.google.inject.Binder;
@@ -31,12 +31,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 
-public class ExampleHttpServer
+public class JsonPlaceholderHttpServer
 {
     private final LifeCycleManager lifeCycleManager;
     private final URI baseUri;
 
-    public ExampleHttpServer()
+    public JsonPlaceholderHttpServer()
     {
         Bootstrap app = new Bootstrap(
                 new TestingNodeModule(),
@@ -78,7 +78,7 @@ public class ExampleHttpServer
         protected void doGet(HttpServletRequest request, HttpServletResponse response)
                 throws IOException
         {
-            URL dataUrl = Resources.getResource(TestExampleClient.class, request.getPathInfo());
+            URL dataUrl = Resources.getResource(TestJsonPlaceholderClient.class, request.getPathInfo());
             Resources.asByteSource(dataUrl).copyTo(response.getOutputStream());
         }
     }

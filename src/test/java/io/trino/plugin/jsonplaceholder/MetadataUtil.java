@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
@@ -37,17 +37,17 @@ public final class MetadataUtil
 {
     private MetadataUtil() {}
 
-    public static final JsonCodec<Map<String, List<ExampleTable>>> CATALOG_CODEC;
-    public static final JsonCodec<ExampleTable> TABLE_CODEC;
-    public static final JsonCodec<ExampleColumnHandle> COLUMN_CODEC;
+    public static final JsonCodec<Map<String, List<JsonPlaceholderTable>>> CATALOG_CODEC;
+    public static final JsonCodec<JsonPlaceholderTable> TABLE_CODEC;
+    public static final JsonCodec<JsonPlaceholderColumnHandle> COLUMN_CODEC;
 
     static {
         ObjectMapperProvider objectMapperProvider = new ObjectMapperProvider();
         objectMapperProvider.setJsonDeserializers(ImmutableMap.of(Type.class, new TestingTypeDeserializer()));
         JsonCodecFactory codecFactory = new JsonCodecFactory(objectMapperProvider);
-        CATALOG_CODEC = codecFactory.mapJsonCodec(String.class, listJsonCodec(ExampleTable.class));
-        TABLE_CODEC = codecFactory.jsonCodec(ExampleTable.class);
-        COLUMN_CODEC = codecFactory.jsonCodec(ExampleColumnHandle.class);
+        CATALOG_CODEC = codecFactory.mapJsonCodec(String.class, listJsonCodec(JsonPlaceholderTable.class));
+        TABLE_CODEC = codecFactory.jsonCodec(JsonPlaceholderTable.class);
+        COLUMN_CODEC = codecFactory.jsonCodec(JsonPlaceholderColumnHandle.class);
     }
 
     public static final class TestingTypeDeserializer

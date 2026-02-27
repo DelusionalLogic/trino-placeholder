@@ -11,25 +11,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import io.airlift.testing.EquivalenceTester;
 import org.junit.jupiter.api.Test;
 
-import static io.trino.plugin.example.MetadataUtil.COLUMN_CODEC;
+import static io.trino.plugin.jsonplaceholder.MetadataUtil.COLUMN_CODEC;
 import static io.trino.spi.type.BigintType.BIGINT;
 import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TestExampleColumnHandle
+public class TestJsonPlaceholderColumnHandle
 {
-    private final ExampleColumnHandle columnHandle = new ExampleColumnHandle("columnName", createUnboundedVarcharType(), 0);
+    private final JsonPlaceholderColumnHandle columnHandle = new JsonPlaceholderColumnHandle("columnName", createUnboundedVarcharType(), 0);
 
     @Test
     public void testJsonRoundTrip()
     {
         String json = COLUMN_CODEC.toJson(columnHandle);
-        ExampleColumnHandle copy = COLUMN_CODEC.fromJson(json);
+        JsonPlaceholderColumnHandle copy = COLUMN_CODEC.fromJson(json);
         assertThat(copy).isEqualTo(columnHandle);
     }
 
@@ -38,13 +38,13 @@ public class TestExampleColumnHandle
     {
         EquivalenceTester.equivalenceTester()
                 .addEquivalentGroup(
-                        new ExampleColumnHandle("columnName", createUnboundedVarcharType(), 0),
-                        new ExampleColumnHandle("columnName", BIGINT, 0),
-                        new ExampleColumnHandle("columnName", createUnboundedVarcharType(), 1))
+                        new JsonPlaceholderColumnHandle("columnName", createUnboundedVarcharType(), 0),
+                        new JsonPlaceholderColumnHandle("columnName", BIGINT, 0),
+                        new JsonPlaceholderColumnHandle("columnName", createUnboundedVarcharType(), 1))
                 .addEquivalentGroup(
-                        new ExampleColumnHandle("columnNameX", createUnboundedVarcharType(), 0),
-                        new ExampleColumnHandle("columnNameX", BIGINT, 0),
-                        new ExampleColumnHandle("columnNameX", createUnboundedVarcharType(), 1))
+                        new JsonPlaceholderColumnHandle("columnNameX", createUnboundedVarcharType(), 0),
+                        new JsonPlaceholderColumnHandle("columnNameX", BIGINT, 0),
+                        new JsonPlaceholderColumnHandle("columnNameX", createUnboundedVarcharType(), 1))
                 .check();
     }
 }

@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -34,40 +34,40 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 @TestInstance(PER_CLASS)
 @Execution(CONCURRENT)
-public class TestExampleRecordSet
+public class TestJsonPlaceholderRecordSet
 {
-    private ExampleHttpServer exampleHttpServer;
+    private JsonPlaceholderHttpServer exampleHttpServer;
     private String dataUri;
 
     @Test
     public void testGetColumnTypes()
     {
-        RecordSet recordSet = new ExampleRecordSet(new ExampleSplit(dataUri), ImmutableList.of(
-                new ExampleColumnHandle("text", createUnboundedVarcharType(), 0),
-                new ExampleColumnHandle("value", BIGINT, 1)));
+        RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
+                new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0),
+                new JsonPlaceholderColumnHandle("value", BIGINT, 1)));
         assertThat(recordSet.getColumnTypes()).isEqualTo(ImmutableList.of(createUnboundedVarcharType(), BIGINT));
 
-        recordSet = new ExampleRecordSet(new ExampleSplit(dataUri), ImmutableList.of(
-                new ExampleColumnHandle("value", BIGINT, 1),
-                new ExampleColumnHandle("text", createUnboundedVarcharType(), 0)));
+        recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
+                new JsonPlaceholderColumnHandle("value", BIGINT, 1),
+                new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0)));
         assertThat(recordSet.getColumnTypes()).isEqualTo(ImmutableList.of(BIGINT, createUnboundedVarcharType()));
 
-        recordSet = new ExampleRecordSet(new ExampleSplit(dataUri), ImmutableList.of(
-                new ExampleColumnHandle("value", BIGINT, 1),
-                new ExampleColumnHandle("value", BIGINT, 1),
-                new ExampleColumnHandle("text", createUnboundedVarcharType(), 0)));
+        recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
+                new JsonPlaceholderColumnHandle("value", BIGINT, 1),
+                new JsonPlaceholderColumnHandle("value", BIGINT, 1),
+                new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0)));
         assertThat(recordSet.getColumnTypes()).isEqualTo(ImmutableList.of(BIGINT, BIGINT, createUnboundedVarcharType()));
 
-        recordSet = new ExampleRecordSet(new ExampleSplit(dataUri), ImmutableList.of());
+        recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of());
         assertThat(recordSet.getColumnTypes()).isEqualTo(ImmutableList.of());
     }
 
     @Test
     public void testCursorSimple()
     {
-        RecordSet recordSet = new ExampleRecordSet(new ExampleSplit(dataUri), ImmutableList.of(
-                new ExampleColumnHandle("text", createUnboundedVarcharType(), 0),
-                new ExampleColumnHandle("value", BIGINT, 1)));
+        RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
+                new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0),
+                new JsonPlaceholderColumnHandle("value", BIGINT, 1)));
         RecordCursor cursor = recordSet.cursor();
 
         assertThat(cursor.getType(0)).isEqualTo(createUnboundedVarcharType());
@@ -89,10 +89,10 @@ public class TestExampleRecordSet
     @Test
     public void testCursorMixedOrder()
     {
-        RecordSet recordSet = new ExampleRecordSet(new ExampleSplit(dataUri), ImmutableList.of(
-                new ExampleColumnHandle("value", BIGINT, 1),
-                new ExampleColumnHandle("value", BIGINT, 1),
-                new ExampleColumnHandle("text", createUnboundedVarcharType(), 0)));
+        RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
+                new JsonPlaceholderColumnHandle("value", BIGINT, 1),
+                new JsonPlaceholderColumnHandle("value", BIGINT, 1),
+                new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0)));
         RecordCursor cursor = recordSet.cursor();
 
         Map<String, Long> data = new LinkedHashMap<>();
@@ -118,8 +118,8 @@ public class TestExampleRecordSet
     @BeforeAll
     public void setUp()
     {
-        exampleHttpServer = new ExampleHttpServer();
-        dataUri = exampleHttpServer.resolve("/example-data/numbers-2.csv").toString();
+        exampleHttpServer = new JsonPlaceholderHttpServer();
+        dataUri = exampleHttpServer.resolve("/jsonplaceholder-data/numbers-2.csv").toString();
     }
 
     @AfterAll

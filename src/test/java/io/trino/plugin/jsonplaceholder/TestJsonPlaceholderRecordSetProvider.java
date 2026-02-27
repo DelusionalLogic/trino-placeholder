@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,19 +36,19 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 @TestInstance(PER_CLASS)
 @Execution(CONCURRENT)
-public class TestExampleRecordSetProvider
+public class TestJsonPlaceholderRecordSetProvider
 {
-    private ExampleHttpServer exampleHttpServer;
+    private JsonPlaceholderHttpServer exampleHttpServer;
     private String dataUri;
 
     @Test
     public void testGetRecordSet()
     {
-        ConnectorTableHandle tableHandle = new ExampleTableHandle("schema", "table");
-        ExampleRecordSetProvider recordSetProvider = new ExampleRecordSetProvider();
-        RecordSet recordSet = recordSetProvider.getRecordSet(ExampleTransactionHandle.INSTANCE, SESSION, new ExampleSplit(dataUri), tableHandle, ImmutableList.of(
-                new ExampleColumnHandle("text", createUnboundedVarcharType(), 0),
-                new ExampleColumnHandle("value", BIGINT, 1)));
+        ConnectorTableHandle tableHandle = new JsonPlaceholderTableHandle("schema", "table");
+        JsonPlaceholderRecordSetProvider recordSetProvider = new JsonPlaceholderRecordSetProvider();
+        RecordSet recordSet = recordSetProvider.getRecordSet(JsonPlaceholderTransactionHandle.INSTANCE, SESSION, new JsonPlaceholderSplit(dataUri), tableHandle, ImmutableList.of(
+                new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0),
+                new JsonPlaceholderColumnHandle("value", BIGINT, 1)));
         assertThat(recordSet)
                 .describedAs("recordSet is null")
                 .isNotNull();
@@ -76,8 +76,8 @@ public class TestExampleRecordSetProvider
     @BeforeAll
     public void setUp()
     {
-        exampleHttpServer = new ExampleHttpServer();
-        dataUri = exampleHttpServer.resolve("/example-data/numbers-2.csv").toString();
+        exampleHttpServer = new JsonPlaceholderHttpServer();
+        dataUri = exampleHttpServer.resolve("/jsonplaceholder-data/numbers-2.csv").toString();
     }
 
     @AfterAll

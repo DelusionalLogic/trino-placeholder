@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.jsonplaceholder;
 
 import com.google.inject.Injector;
 import io.airlift.bootstrap.Bootstrap;
@@ -27,13 +27,13 @@ import java.util.Map;
 import static io.trino.plugin.base.Versions.checkStrictSpiVersionMatch;
 import static java.util.Objects.requireNonNull;
 
-public class ExampleConnectorFactory
+public class JsonPlaceholderConnectorFactory
         implements ConnectorFactory
 {
     @Override
     public String getName()
     {
-        return "example_http";
+        return "jsonplaceholder";
     }
 
     @Override
@@ -47,13 +47,13 @@ public class ExampleConnectorFactory
                 new JsonModule(),
                 new TypeDeserializerModule(context.getTypeManager()),
                 new CatalogNameModule(catalogName),
-                new ExampleModule());
+                new JsonPlaceholderModule());
 
         Injector injector = app
                 .doNotInitializeLogging()
                 .setRequiredConfigurationProperties(requiredConfig)
                 .initialize();
 
-        return injector.getInstance(ExampleConnector.class);
+        return injector.getInstance(JsonPlaceholderConnector.class);
     }
 }
