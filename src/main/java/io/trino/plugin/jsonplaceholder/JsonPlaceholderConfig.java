@@ -20,18 +20,18 @@ import java.net.URI;
 
 public class JsonPlaceholderConfig
 {
-    private URI metadata;
+    private URI apiBaseUri;
 
     @NotNull
-    public URI getMetadata()
+    public URI getApiBaseUri()
     {
-        return metadata;
+        return apiBaseUri;
     }
 
-    @Config("metadata-uri")
-    public JsonPlaceholderConfig setMetadata(URI metadata)
+    @Config("api-base-uri")
+    public JsonPlaceholderConfig setApiBaseUri(URI apiBaseUri)
     {
-        this.metadata = metadata;
+        this.apiBaseUri = apiBaseUri;
         return this;
     }
 }

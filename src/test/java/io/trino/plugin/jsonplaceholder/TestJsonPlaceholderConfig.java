@@ -29,16 +29,16 @@ public class TestJsonPlaceholderConfig
     public void testDefaults()
     {
         assertRecordedDefaults(recordDefaults(JsonPlaceholderConfig.class)
-                .setMetadata(null));
+                .setApiBaseUri(null));
     }
 
     @Test
     public void testExplicitPropertyMappings()
     {
-        Map<String, String> properties = ImmutableMap.of("metadata-uri", "file://test.json");
+        Map<String, String> properties = ImmutableMap.of("api-base-uri", "https://jsonplaceholder.typicode.com");
 
         JsonPlaceholderConfig expected = new JsonPlaceholderConfig()
-                .setMetadata(URI.create("file://test.json"));
+                .setApiBaseUri(URI.create("https://jsonplaceholder.typicode.com"));
 
         assertFullMapping(properties, expected);
     }

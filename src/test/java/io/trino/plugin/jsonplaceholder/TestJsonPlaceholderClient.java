@@ -15,13 +15,10 @@ package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Resources;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
-import java.net.URL;
 
-import static io.trino.plugin.jsonplaceholder.MetadataUtil.CATALOG_CODEC;
 import static io.trino.spi.type.BigintType.BIGINT;
 import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,22 +29,33 @@ public class TestJsonPlaceholderClient
     public void testMetadata()
             throws Exception
     {
-        URL metadataUrl = Resources.getResource(TestJsonPlaceholderClient.class, "/jsonplaceholder-data/example-metadata.json");
-        assertThat(metadataUrl)
-                .describedAs("metadataUrl is null")
-                .isNotNull();
-        URI metadata = metadataUrl.toURI();
-        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setMetadata(metadata), CATALOG_CODEC);
-        assertThat(client.getSchemaNames()).isEqualTo(ImmutableSet.of("example", "tpch"));
-        assertThat(client.getTableNames("example")).isEqualTo(ImmutableSet.of("numbers"));
-        assertThat(client.getTableNames("tpch")).isEqualTo(ImmutableSet.of("orders", "lineitem"));
+        URI apiBaseUri = URI.create("https://jsonplaceholder.typicode.com");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
 
-        JsonPlaceholderTable table = client.getTable("example", "numbers");
+        // Test schema discovery
+        assertThat(client.getSchemaNames()).isEqualTo(ImmutableSet.of("default"));
+
+        // Test table discovery in default schema
+        assertThat(client.getTableNames("default")).isEqualTo(ImmutableSet.of("posts"));
+
+        // Test table discovery in unknown schema
+        assertThat(client.getTableNames("unknown")).isEqualTo(ImmutableSet.of());
+
+        // Test posts table
+        JsonPlaceholderTable table = client.getTable("default", "posts");
         assertThat(table)
                 .describedAs("table is null")
                 .isNotNull();
-        assertThat(table.getName()).isEqualTo("numbers");
-        assertThat(table.getColumns()).isEqualTo(ImmutableList.of(new JsonPlaceholderColumn("text", createUnboundedVarcharType()), new JsonPlaceholderColumn("value", BIGINT)));
-        assertThat(table.getSources()).isEqualTo(ImmutableList.of(metadata.resolve("numbers-1.csv"), metadata.resolve("numbers-2.csv")));
+        assertThat(table.getName()).isEqualTo("posts");
+        assertThat(table.getColumns()).isEqualTo(ImmutableList.of(
+                new JsonPlaceholderColumn("userid", BIGINT),
+                new JsonPlaceholderColumn("id", BIGINT),
+                new JsonPlaceholderColumn("title", createUnboundedVarcharType()),
+                new JsonPlaceholderColumn("body", createUnboundedVarcharType())));
+        assertThat(table.getSources()).isEqualTo(ImmutableList.of(apiBaseUri.resolve("/posts")));
+
+        // Test getting unknown table returns null
+        assertThat(client.getTable("default", "unknown")).isNull();
+        assertThat(client.getTable("unknown", "posts")).isNull();
     }
 }

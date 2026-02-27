@@ -79,6 +79,10 @@ public class JsonPlaceholderHttpServer
                 throws IOException
         {
             URL dataUrl = Resources.getResource(TestJsonPlaceholderClient.class, request.getPathInfo());
+            // Set content type for JSON responses
+            if (request.getPathInfo().endsWith(".json") || request.getPathInfo().equals("/posts")) {
+                response.setContentType("application/json");
+            }
             Resources.asByteSource(dataUrl).copyTo(response.getOutputStream());
         }
     }

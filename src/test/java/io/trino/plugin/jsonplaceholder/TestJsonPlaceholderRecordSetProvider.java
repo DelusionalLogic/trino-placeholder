@@ -44,11 +44,11 @@ public class TestJsonPlaceholderRecordSetProvider
     @Test
     public void testGetRecordSet()
     {
-        ConnectorTableHandle tableHandle = new JsonPlaceholderTableHandle("schema", "table");
+        ConnectorTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "posts");
         JsonPlaceholderRecordSetProvider recordSetProvider = new JsonPlaceholderRecordSetProvider();
         RecordSet recordSet = recordSetProvider.getRecordSet(JsonPlaceholderTransactionHandle.INSTANCE, SESSION, new JsonPlaceholderSplit(dataUri), tableHandle, ImmutableList.of(
-                new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0),
-                new JsonPlaceholderColumnHandle("value", BIGINT, 1)));
+                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
+                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2)));
         assertThat(recordSet)
                 .describedAs("recordSet is null")
                 .isNotNull();
@@ -58,14 +58,21 @@ public class TestJsonPlaceholderRecordSetProvider
                 .describedAs("cursor is null")
                 .isNotNull();
 
-        Map<String, Long> data = new LinkedHashMap<>();
+        Map<Long, String> data = new LinkedHashMap<>();
         while (cursor.advanceNextPosition()) {
-            data.put(cursor.getSlice(0).toStringUtf8(), cursor.getLong(1));
+            data.put(cursor.getLong(0), cursor.getSlice(1).toStringUtf8());
         }
-        assertThat(data).isEqualTo(ImmutableMap.<String, Long>builder()
-                .put("ten", 10L)
-                .put("eleven", 11L)
-                .put("twelve", 12L)
+        assertThat(data).isEqualTo(ImmutableMap.<Long, String>builder()
+                .put(1L, "sunt aut facere repellat provident occaecati excepturi optio reprehenderit")
+                .put(2L, "qui est esse")
+                .put(3L, "ea molestias quasi exercitationem repellat qui ipsa sit aut")
+                .put(4L, "eum et est occaecati")
+                .put(5L, "nesciunt quas odio")
+                .put(6L, "dolorem eum magni eos aperiam quia")
+                .put(7L, "magnam facilis autem")
+                .put(8L, "dolorem dolore est ipsam")
+                .put(9L, "nesciunt iure omnis dolorem tempora et accusantium")
+                .put(10L, "optio molestias id quia eum")
                 .buildOrThrow());
     }
 
@@ -77,7 +84,7 @@ public class TestJsonPlaceholderRecordSetProvider
     public void setUp()
     {
         exampleHttpServer = new JsonPlaceholderHttpServer();
-        dataUri = exampleHttpServer.resolve("/jsonplaceholder-data/numbers-2.csv").toString();
+        dataUri = exampleHttpServer.resolve("/jsonplaceholder-data/posts.json").toString();
     }
 
     @AfterAll

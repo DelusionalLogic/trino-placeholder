@@ -43,20 +43,16 @@ public class TestJsonPlaceholderRecordSet
     public void testGetColumnTypes()
     {
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
-                new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0),
-                new JsonPlaceholderColumnHandle("value", BIGINT, 1)));
-        assertThat(recordSet.getColumnTypes()).isEqualTo(ImmutableList.of(createUnboundedVarcharType(), BIGINT));
+                new JsonPlaceholderColumnHandle("userid", BIGINT, 0),
+                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
+                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2),
+                new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType(), 3)));
+        assertThat(recordSet.getColumnTypes()).isEqualTo(ImmutableList.of(BIGINT, BIGINT, createUnboundedVarcharType(), createUnboundedVarcharType()));
 
         recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
-                new JsonPlaceholderColumnHandle("value", BIGINT, 1),
-                new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0)));
+                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
+                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2)));
         assertThat(recordSet.getColumnTypes()).isEqualTo(ImmutableList.of(BIGINT, createUnboundedVarcharType()));
-
-        recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
-                new JsonPlaceholderColumnHandle("value", BIGINT, 1),
-                new JsonPlaceholderColumnHandle("value", BIGINT, 1),
-                new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0)));
-        assertThat(recordSet.getColumnTypes()).isEqualTo(ImmutableList.of(BIGINT, BIGINT, createUnboundedVarcharType()));
 
         recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of());
         assertThat(recordSet.getColumnTypes()).isEqualTo(ImmutableList.of());
@@ -66,23 +62,33 @@ public class TestJsonPlaceholderRecordSet
     public void testCursorSimple()
     {
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
-                new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0),
-                new JsonPlaceholderColumnHandle("value", BIGINT, 1)));
+                new JsonPlaceholderColumnHandle("userid", BIGINT, 0),
+                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
+                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2)));
         RecordCursor cursor = recordSet.cursor();
 
-        assertThat(cursor.getType(0)).isEqualTo(createUnboundedVarcharType());
+        assertThat(cursor.getType(0)).isEqualTo(BIGINT);
         assertThat(cursor.getType(1)).isEqualTo(BIGINT);
+        assertThat(cursor.getType(2)).isEqualTo(createUnboundedVarcharType());
 
-        Map<String, Long> data = new LinkedHashMap<>();
+        Map<Long, String> data = new LinkedHashMap<>();
         while (cursor.advanceNextPosition()) {
-            data.put(cursor.getSlice(0).toStringUtf8(), cursor.getLong(1));
+            data.put(cursor.getLong(1), cursor.getSlice(2).toStringUtf8());
             assertThat(cursor.isNull(0)).isFalse();
             assertThat(cursor.isNull(1)).isFalse();
+            assertThat(cursor.isNull(2)).isFalse();
         }
-        assertThat(data).isEqualTo(ImmutableMap.<String, Long>builder()
-                .put("ten", 10L)
-                .put("eleven", 11L)
-                .put("twelve", 12L)
+        assertThat(data).isEqualTo(ImmutableMap.<Long, String>builder()
+                .put(1L, "sunt aut facere repellat provident occaecati excepturi optio reprehenderit")
+                .put(2L, "qui est esse")
+                .put(3L, "ea molestias quasi exercitationem repellat qui ipsa sit aut")
+                .put(4L, "eum et est occaecati")
+                .put(5L, "nesciunt quas odio")
+                .put(6L, "dolorem eum magni eos aperiam quia")
+                .put(7L, "magnam facilis autem")
+                .put(8L, "dolorem dolore est ipsam")
+                .put(9L, "nesciunt iure omnis dolorem tempora et accusantium")
+                .put(10L, "optio molestias id quia eum")
                 .buildOrThrow());
     }
 
@@ -90,36 +96,82 @@ public class TestJsonPlaceholderRecordSet
     public void testCursorMixedOrder()
     {
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
-                new JsonPlaceholderColumnHandle("value", BIGINT, 1),
-                new JsonPlaceholderColumnHandle("value", BIGINT, 1),
-                new JsonPlaceholderColumnHandle("text", createUnboundedVarcharType(), 0)));
+                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2),
+                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
+                new JsonPlaceholderColumnHandle("userid", BIGINT, 0)));
         RecordCursor cursor = recordSet.cursor();
 
-        Map<String, Long> data = new LinkedHashMap<>();
+        Map<Long, String> data = new LinkedHashMap<>();
         while (cursor.advanceNextPosition()) {
-            assertThat(cursor.getLong(0)).isEqualTo(cursor.getLong(1));
-            data.put(cursor.getSlice(2).toStringUtf8(), cursor.getLong(0));
+            data.put(cursor.getLong(1), cursor.getSlice(0).toStringUtf8());
         }
-        assertThat(data).isEqualTo(ImmutableMap.<String, Long>builder()
-                .put("ten", 10L)
-                .put("eleven", 11L)
-                .put("twelve", 12L)
+        assertThat(data).isEqualTo(ImmutableMap.<Long, String>builder()
+                .put(1L, "sunt aut facere repellat provident occaecati excepturi optio reprehenderit")
+                .put(2L, "qui est esse")
+                .put(3L, "ea molestias quasi exercitationem repellat qui ipsa sit aut")
+                .put(4L, "eum et est occaecati")
+                .put(5L, "nesciunt quas odio")
+                .put(6L, "dolorem eum magni eos aperiam quia")
+                .put(7L, "magnam facilis autem")
+                .put(8L, "dolorem dolore est ipsam")
+                .put(9L, "nesciunt iure omnis dolorem tempora et accusantium")
+                .put(10L, "optio molestias id quia eum")
                 .buildOrThrow());
     }
 
-    //
-    // TODO: your code should also have tests for all types that you support and for the state machine of your cursor
-    //
+    @Test
+    public void testCursorWithBody()
+    {
+        RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
+                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
+                new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType(), 3)));
+        RecordCursor cursor = recordSet.cursor();
 
-    //
-    // Start http server for testing
-    //
+        int count = 0;
+        while (cursor.advanceNextPosition()) {
+            count++;
+            long id = cursor.getLong(0);
+            String body = cursor.getSlice(1).toStringUtf8();
+
+            assertThat(cursor.isNull(0)).isFalse();
+            assertThat(cursor.isNull(1)).isFalse();
+            assertThat(id).isGreaterThan(0);
+            assertThat(body).isNotEmpty();
+
+            // Body field contains newlines, verify it's preserved
+            if (id == 1) {
+                assertThat(body).contains("\n");
+            }
+        }
+        assertThat(count).isEqualTo(10);
+    }
+
+    @Test
+    public void testCursorAllColumns()
+    {
+        RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
+                new JsonPlaceholderColumnHandle("userid", BIGINT, 0),
+                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
+                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2),
+                new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType(), 3)));
+        RecordCursor cursor = recordSet.cursor();
+
+        int count = 0;
+        while (cursor.advanceNextPosition()) {
+            count++;
+            assertThat(cursor.getLong(0)).isGreaterThan(0); // userId
+            assertThat(cursor.getLong(1)).isGreaterThan(0); // id
+            assertThat(cursor.getSlice(2).toStringUtf8()).isNotEmpty(); // title
+            assertThat(cursor.getSlice(3).toStringUtf8()).isNotEmpty(); // body
+        }
+        assertThat(count).isEqualTo(10);
+    }
 
     @BeforeAll
     public void setUp()
     {
         exampleHttpServer = new JsonPlaceholderHttpServer();
-        dataUri = exampleHttpServer.resolve("/jsonplaceholder-data/numbers-2.csv").toString();
+        dataUri = exampleHttpServer.resolve("/jsonplaceholder-data/posts.json").toString();
     }
 
     @AfterAll

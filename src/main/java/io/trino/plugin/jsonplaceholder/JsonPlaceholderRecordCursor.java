@@ -13,7 +13,8 @@
  */
 package io.trino.plugin.jsonplaceholder;
 
-import com.google.common.base.Splitter;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.io.ByteSource;
 import com.google.common.io.CountingInputStream;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -33,20 +35,19 @@ import static io.trino.spi.type.BigintType.BIGINT;
 import static io.trino.spi.type.BooleanType.BOOLEAN;
 import static io.trino.spi.type.DoubleType.DOUBLE;
 import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class JsonPlaceholderRecordCursor
         implements RecordCursor
 {
-    private static final Splitter LINE_SPLITTER = Splitter.on(",").trimResults();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final List<JsonPlaceholderColumnHandle> columnHandles;
     private final int[] fieldToColumnIndex;
 
-    private final Iterator<String> lines;
+    private final Iterator<Map<String, Object>> posts;
     private final long totalBytes;
 
-    private List<String> fields;
+    private Map<String, Object> currentPost;
 
     public JsonPlaceholderRecordCursor(List<JsonPlaceholderColumnHandle> columnHandles, ByteSource byteSource)
     {
@@ -59,7 +60,10 @@ public class JsonPlaceholderRecordCursor
         }
 
         try (CountingInputStream input = new CountingInputStream(byteSource.openStream())) {
-            lines = byteSource.asCharSource(UTF_8).readLines().iterator();
+            List<Map<String, Object>> postsList = OBJECT_MAPPER.readValue(
+                    input,
+                    new TypeReference<List<Map<String, Object>>>() {});
+            posts = postsList.iterator();
             totalBytes = input.getCount();
         }
         catch (IOException e) {
@@ -89,49 +93,71 @@ public class JsonPlaceholderRecordCursor
     @Override
     public boolean advanceNextPosition()
     {
-        if (!lines.hasNext()) {
+        if (!posts.hasNext()) {
             return false;
         }
-        String line = lines.next();
-        fields = LINE_SPLITTER.splitToList(line);
-
+        currentPost = posts.next();
         return true;
     }
 
-    private String getFieldValue(int field)
+    private Object getFieldValue(int field)
     {
-        checkState(fields != null, "Cursor has not been advanced yet");
+        checkState(currentPost != null, "Cursor has not been advanced yet");
 
-        int columnIndex = fieldToColumnIndex[field];
-        return fields.get(columnIndex);
+        JsonPlaceholderColumnHandle columnHandle = columnHandles.get(field);
+        String columnName = columnHandle.getColumnName();
+
+        // Map column names to JSON field names (Trino uses lowercase, JSON uses camelCase)
+        String jsonFieldName = columnName;
+        if ("userid".equals(columnName)) {
+            jsonFieldName = "userId";
+        }
+
+        return currentPost.get(jsonFieldName);
     }
 
     @Override
     public boolean getBoolean(int field)
     {
         checkFieldType(field, BOOLEAN);
-        return Boolean.parseBoolean(getFieldValue(field));
+        Object value = getFieldValue(field);
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        return Boolean.parseBoolean(String.valueOf(value));
     }
 
     @Override
     public long getLong(int field)
     {
         checkFieldType(field, BIGINT);
-        return Long.parseLong(getFieldValue(field));
+        Object value = getFieldValue(field);
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        return Long.parseLong(String.valueOf(value));
     }
 
     @Override
     public double getDouble(int field)
     {
         checkFieldType(field, DOUBLE);
-        return Double.parseDouble(getFieldValue(field));
+        Object value = getFieldValue(field);
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
+        }
+        return Double.parseDouble(String.valueOf(value));
     }
 
     @Override
     public Slice getSlice(int field)
     {
         checkFieldType(field, createUnboundedVarcharType());
-        return Slices.utf8Slice(getFieldValue(field));
+        Object value = getFieldValue(field);
+        if (value == null) {
+            return Slices.utf8Slice("");
+        }
+        return Slices.utf8Slice(String.valueOf(value));
     }
 
     @Override
@@ -144,7 +170,8 @@ public class JsonPlaceholderRecordCursor
     public boolean isNull(int field)
     {
         checkArgument(field < columnHandles.size(), "Invalid field index");
-        return Strings.isNullOrEmpty(getFieldValue(field));
+        Object value = getFieldValue(field);
+        return value == null || (value instanceof String && Strings.isNullOrEmpty((String) value));
     }
 
     private void checkFieldType(int field, Type expected)
