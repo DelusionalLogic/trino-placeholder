@@ -15,20 +15,14 @@
 package io.trino.plugin.jsonplaceholder.filter;
 
 import io.trino.plugin.jsonplaceholder.JsonPlaceholderColumnHandle;
-import io.trino.plugin.jsonplaceholder.JsonPlaceholderTableHandle;
 import io.trino.spi.connector.ColumnHandle;
-import io.trino.spi.connector.ConnectorTableHandle;
-import io.trino.spi.connector.Constraint;
-import io.trino.spi.connector.ConstraintApplicationResult;
 import io.trino.spi.predicate.Domain;
 import io.trino.spi.predicate.TupleDomain;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 import java.util.logging.Logger;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public interface FilterApplier
@@ -36,73 +30,6 @@ public interface FilterApplier
     Logger log = Logger.getLogger(FilterApplier.class.getName());
 
     Map<String, FilterType> getSupportedFilters();
-
-    default Optional<ConstraintApplicationResult<ConnectorTableHandle>> applyFilter(
-            JsonPlaceholderTableHandle table,
-            Map<String, ColumnHandle> columns,
-            Constraint constraint)
-    {
-        log.warning(format("applyFilter %s", constraint));
-        TupleDomain<ColumnHandle> summary = constraint.getSummary();
-        if (summary.isAll() || summary.getDomains().isEmpty()) {
-            return Optional.empty();
-        }
-
-        TupleDomain<ColumnHandle> currentConstraint = table.getConstraint();
-        Map<String, FilterType> supportedFilters = getSupportedFilters();
-
-        boolean found = false;
-        for (Map.Entry<String, FilterType> entry : supportedFilters.entrySet()) {
-            String columnName = entry.getKey();
-
-            ColumnHandle columnHandle = columns.get(columnName);
-            if (columnHandle == null) {
-                continue;
-            }
-
-            if (!summary.getDomains().isPresent()) {
-                continue;
-            }
-
-            Domain domain = summary.getDomains().get().get(columnHandle);
-            if (domain == null) {
-                continue;
-            }
-
-            // Create constraint for this column
-            TupleDomain<ColumnHandle> newConstraint = TupleDomain.withColumnDomains(
-                    Map.of(columnHandle, domain));
-
-            // Check if this constraint is already applied
-            if (currentConstraint.getDomains().isPresent() &&
-                    currentConstraint.getDomains().get().containsKey(columnHandle)) {
-                Domain currentDomain = currentConstraint.getDomains().get().get(columnHandle);
-                if (currentDomain.equals(domain)) {
-                    throw new AssertionError("Constraint was already applied");
-                }
-            }
-
-            currentConstraint = currentConstraint.intersect(newConstraint);
-
-            found = true;
-
-            // Remove from remaining constraints
-            summary = summary.filter((ch, d) -> !ch.equals(columnHandle));
-        }
-
-        if (!found) {
-            return Optional.empty();
-        }
-
-        return Optional.of(new ConstraintApplicationResult<>(
-                    new JsonPlaceholderTableHandle(
-                        table.getSchemaName(),
-                        table.getTableName(),
-                        currentConstraint),
-                    summary,
-                    constraint.getExpression(),
-                    false));
-    }
 
     default Collection<Object> getFilterAll(JsonPlaceholderColumnHandle column, TupleDomain<ColumnHandle> constraint)
     {
