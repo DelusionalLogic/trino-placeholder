@@ -15,8 +15,6 @@ package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import io.trino.plugin.jsonplaceholder.filter.CommentsFilterApplier;
-import io.trino.plugin.jsonplaceholder.filter.FilterApplier;
 import io.trino.spi.TrinoException;
 import io.trino.spi.connector.ColumnHandle;
 import io.trino.spi.connector.ConnectorSession;
@@ -29,6 +27,7 @@ import io.trino.spi.connector.ConnectorTransactionHandle;
 import io.trino.spi.connector.Constraint;
 import io.trino.spi.connector.DynamicFilter;
 import io.trino.spi.connector.TableNotFoundException;
+import io.trino.spi.predicate.Domain;
 import io.trino.spi.predicate.TupleDomain;
 
 import java.net.URI;
@@ -44,7 +43,6 @@ import static java.util.Objects.requireNonNull;
 public class JsonPlaceholderSplitManager
         implements ConnectorSplitManager
 {
-    private static final Logger log = Logger.getLogger(JsonPlaceholderSplitManager.class.getName());
     private static final ConnectorSplitBatch EMPTY_BATCH = new ConnectorSplitBatch(ImmutableList.of(), false);
 
     private final JsonPlaceholderClient client;
@@ -66,7 +64,7 @@ public class JsonPlaceholderSplitManager
             Constraint constraint)
     {
         JsonPlaceholderTableHandle tableHandle = (JsonPlaceholderTableHandle) connectorTableHandle;
-        return new DynamicFilteringSplitSource(client, meta, session, tableHandle, dynamicFilter, new CommentsFilterApplier());
+        return new DynamicFilteringSplitSource(client, meta, session, tableHandle, dynamicFilter);
     }
 
     private static class DynamicFilteringSplitSource
@@ -79,22 +77,19 @@ public class JsonPlaceholderSplitManager
         private final ConnectorSession session;
         private final JsonPlaceholderTableHandle tableHandle;
         private final DynamicFilter filter;
-        private final FilterApplier applier;
 
         DynamicFilteringSplitSource(
                 JsonPlaceholderClient client,
                 JsonPlaceholderMetadata meta,
                 ConnectorSession session,
                 JsonPlaceholderTableHandle tableHandle,
-                DynamicFilter filter,
-                FilterApplier applier)
+                DynamicFilter filter)
         {
             this.client = requireNonNull(client);
             this.meta = requireNonNull(meta);
             this.session = requireNonNull(session);
             this.tableHandle = requireNonNull(tableHandle);
             this.filter = requireNonNull(filter);
-            this.applier = requireNonNull(applier);
         }
 
         @Override
@@ -120,18 +115,21 @@ public class JsonPlaceholderSplitManager
 
                 // Handle URI templates for comments table
                 if (tableHandle.getTableName().equals("comments")) {
-                    FilterApplier filterApplier = new CommentsFilterApplier();
                     TupleDomain<ColumnHandle> tableConstraint = tableHandle.getConstraint();
                     tableConstraint = tableConstraint.intersect(filter.getCurrentPredicate());
 
                     JsonPlaceholderColumnHandle postIdColumn = (JsonPlaceholderColumnHandle) meta.getColumnHandles(session, tableHandle).get("postid");
-                    var postId = filterApplier.getFilterAll(postIdColumn, tableConstraint);
 
-                    if (postId == null) {
+                    if (!tableConstraint.getDomains().isPresent()) {
                         throw new TrinoException(INVALID_ROW_FILTER, "Missing required filter: postid");
                     }
 
-                    for (var id : postId) {
+                    Domain domain = tableConstraint.getDomains().get().get(postIdColumn);
+                    if (domain == null) {
+                        throw new TrinoException(INVALID_ROW_FILTER, "Missing required filter: postid");
+                    }
+
+                    for (var id : domain.getValues().tryExpandRanges(1024).get()) {
                         splits.add(new JsonPlaceholderSplit(uriString.replace("__POSTID__", id.toString())));
                     }
                 }

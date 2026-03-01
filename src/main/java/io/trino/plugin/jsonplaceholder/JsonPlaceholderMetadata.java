@@ -17,8 +17,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
-import io.trino.plugin.jsonplaceholder.filter.CommentsFilterApplier;
-import io.trino.plugin.jsonplaceholder.filter.FilterApplier;
 import io.trino.plugin.jsonplaceholder.filter.FilterType;
 import io.trino.spi.TrinoException;
 import io.trino.spi.connector.ColumnHandle;
@@ -51,16 +49,14 @@ import static java.util.Objects.requireNonNull;
 public class JsonPlaceholderMetadata
         implements ConnectorMetadata
 {
-    private static final Logger log = Logger.getLogger(FilterApplier.class.getName());
+    private static final Logger log = Logger.getLogger(JsonPlaceholderMetadata.class.getName());
 
     private final JsonPlaceholderClient exampleClient;
-    private final Map<String, FilterApplier> filterAppliers;
 
     @Inject
     public JsonPlaceholderMetadata(JsonPlaceholderClient exampleClient)
     {
         this.exampleClient = requireNonNull(exampleClient, "exampleClient is null");
-        this.filterAppliers = ImmutableMap.of("comments", new CommentsFilterApplier());
     }
 
     @Override
