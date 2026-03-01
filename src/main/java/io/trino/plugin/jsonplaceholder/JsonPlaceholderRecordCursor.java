@@ -42,7 +42,6 @@ public class JsonPlaceholderRecordCursor
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final List<JsonPlaceholderColumnHandle> columnHandles;
-    private final int[] fieldToColumnIndex;
 
     private final Iterator<Map<String, Object>> posts;
     private final long totalBytes;
@@ -52,12 +51,6 @@ public class JsonPlaceholderRecordCursor
     public JsonPlaceholderRecordCursor(List<JsonPlaceholderColumnHandle> columnHandles, ByteSource byteSource)
     {
         this.columnHandles = columnHandles;
-
-        fieldToColumnIndex = new int[columnHandles.size()];
-        for (int i = 0; i < columnHandles.size(); i++) {
-            JsonPlaceholderColumnHandle columnHandle = columnHandles.get(i);
-            fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
-        }
 
         try (CountingInputStream input = new CountingInputStream(byteSource.openStream())) {
             List<Map<String, Object>> postsList = OBJECT_MAPPER.readValue(

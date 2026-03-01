@@ -119,10 +119,8 @@ public class JsonPlaceholderMetadata
         }
 
         ImmutableMap.Builder<String, ColumnHandle> columnHandles = ImmutableMap.builder();
-        int index = 0;
         for (ColumnMetadata column : table.getColumnsMetadata()) {
-            columnHandles.put(column.getName(), new JsonPlaceholderColumnHandle(column.getName(), column.getType(), index));
-            index++;
+            columnHandles.put(column.getName(), new JsonPlaceholderColumnHandle(column.getName(), column.getType()));
         }
         return columnHandles.buildOrThrow();
     }

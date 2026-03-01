@@ -58,4 +58,19 @@ public class TestJsonPlaceholderClient
         assertThat(client.getTable("default", "unknown")).isNull();
         assertThat(client.getTable("unknown", "posts")).isNull();
     }
+
+    @Test
+    public void testCommentsTableMetadata()
+            throws Exception
+    {
+        URI apiBaseUri = URI.create("https://jsonplaceholder.typicode.com");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+
+        // Test comments table
+        JsonPlaceholderTable table = client.getTable("default", "comments");
+        assertThat(table).isNotNull();
+        assertThat(table.getColumns()).hasSize(5);
+        assertThat(table.getColumns().stream().map(JsonPlaceholderColumn::getName))
+                .containsExactly("postid", "id", "name", "email", "body");
+    }
 }

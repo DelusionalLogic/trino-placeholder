@@ -41,6 +41,8 @@ public class TestJsonPlaceholderRecordSetProvider
 {
     private JsonPlaceholderHttpServer exampleHttpServer;
     private String dataUri;
+    private String commentsPost1Uri;
+    private String commentsPost2Uri;
 
     @Test
     public void testGetRecordSet()
@@ -48,8 +50,8 @@ public class TestJsonPlaceholderRecordSetProvider
         ConnectorTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "posts", TupleDomain.all());
         JsonPlaceholderRecordSetProvider recordSetProvider = new JsonPlaceholderRecordSetProvider();
         RecordSet recordSet = recordSetProvider.getRecordSet(JsonPlaceholderTransactionHandle.INSTANCE, SESSION, new JsonPlaceholderSplit(dataUri), tableHandle, ImmutableList.of(
-                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
-                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2)));
+                new JsonPlaceholderColumnHandle("id", BIGINT),
+                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType())));
         assertThat(recordSet)
                 .describedAs("recordSet is null")
                 .isNotNull();
@@ -86,6 +88,8 @@ public class TestJsonPlaceholderRecordSetProvider
     {
         exampleHttpServer = new JsonPlaceholderHttpServer();
         dataUri = exampleHttpServer.resolve("/jsonplaceholder-data/posts.json").toString();
+        commentsPost1Uri = exampleHttpServer.resolve("/posts/1/comments").toString();
+        commentsPost2Uri = exampleHttpServer.resolve("/posts/2/comments").toString();
     }
 
     @AfterAll
@@ -94,5 +98,79 @@ public class TestJsonPlaceholderRecordSetProvider
         if (exampleHttpServer != null) {
             exampleHttpServer.stop();
         }
+    }
+
+    @Test
+    public void testGetRecordSetForCommentsPost1()
+    {
+        ConnectorTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
+        JsonPlaceholderRecordSetProvider recordSetProvider = new JsonPlaceholderRecordSetProvider();
+        RecordSet recordSet = recordSetProvider.getRecordSet(
+                JsonPlaceholderTransactionHandle.INSTANCE,
+                SESSION,
+                new JsonPlaceholderSplit(commentsPost1Uri),
+                tableHandle,
+                ImmutableList.of(
+                        new JsonPlaceholderColumnHandle("postid", BIGINT),
+                        new JsonPlaceholderColumnHandle("id", BIGINT),
+                        new JsonPlaceholderColumnHandle("name", createUnboundedVarcharType()),
+                        new JsonPlaceholderColumnHandle("email", createUnboundedVarcharType()),
+                        new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType())));
+
+        assertThat(recordSet).isNotNull();
+
+        RecordCursor cursor = recordSet.cursor();
+        assertThat(cursor).isNotNull();
+
+        // Verify first comment
+        assertThat(cursor.advanceNextPosition()).isTrue();
+        assertThat(cursor.getLong(0)).isEqualTo(1L); // postid
+        assertThat(cursor.getLong(1)).isEqualTo(1L); // id
+        assertThat(cursor.getSlice(2).toStringUtf8()).isEqualTo("id labore ex et quam laborum"); // name
+        assertThat(cursor.getSlice(3).toStringUtf8()).isEqualTo("Eliseo@gardner.biz"); // email
+        assertThat(cursor.getSlice(4).toStringUtf8()).startsWith("laudantium enim quasi est quidem magnam"); // body
+
+        // Count remaining records and verify all have postid = 1
+        int count = 1;
+        while (cursor.advanceNextPosition()) {
+            assertThat(cursor.getLong(0)).isEqualTo(1L); // All should have postid = 1
+            count++;
+        }
+
+        assertThat(count).isEqualTo(5);
+    }
+
+    @Test
+    public void testGetRecordSetForCommentsPost2()
+    {
+        ConnectorTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
+        JsonPlaceholderRecordSetProvider recordSetProvider = new JsonPlaceholderRecordSetProvider();
+        RecordSet recordSet = recordSetProvider.getRecordSet(
+                JsonPlaceholderTransactionHandle.INSTANCE,
+                SESSION,
+                new JsonPlaceholderSplit(commentsPost2Uri),
+                tableHandle,
+                ImmutableList.of(
+                        new JsonPlaceholderColumnHandle("postid", BIGINT),
+                        new JsonPlaceholderColumnHandle("id", BIGINT)));
+
+        assertThat(recordSet).isNotNull();
+
+        RecordCursor cursor = recordSet.cursor();
+        Map<Long, Long> data = new LinkedHashMap<>();
+        while (cursor.advanceNextPosition()) {
+            long postId = cursor.getLong(0);
+            long id = cursor.getLong(1);
+            data.put(id, postId);
+        }
+
+        // Verify we got exactly 5 comments with ids 6-10, all with postid = 2
+        assertThat(data).isEqualTo(ImmutableMap.<Long, Long>builder()
+                .put(6L, 2L)
+                .put(7L, 2L)
+                .put(8L, 2L)
+                .put(9L, 2L)
+                .put(10L, 2L)
+                .buildOrThrow());
     }
 }

@@ -22,6 +22,7 @@ import io.trino.spi.connector.ConnectorTableMetadata;
 import io.trino.spi.connector.SaveMode;
 import io.trino.spi.connector.SchemaTableName;
 import io.trino.spi.connector.TableNotFoundException;
+import io.trino.spi.predicate.Domain;
 import io.trino.spi.predicate.TupleDomain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,7 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_METHOD;
 public class TestJsonPlaceholderMetadata
 {
     private static final JsonPlaceholderTableHandle POSTS_TABLE_HANDLE = new JsonPlaceholderTableHandle("default", "posts", TupleDomain.all());
+    private static final JsonPlaceholderTableHandle COMMENTS_TABLE_HANDLE = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
     private JsonPlaceholderMetadata metadata;
 
     @BeforeEach
@@ -72,10 +74,10 @@ public class TestJsonPlaceholderMetadata
     {
         // known table
         assertThat(metadata.getColumnHandles(SESSION, POSTS_TABLE_HANDLE)).isEqualTo(ImmutableMap.of(
-                "userid", new JsonPlaceholderColumnHandle("userid", BIGINT, 0),
-                "id", new JsonPlaceholderColumnHandle("id", BIGINT, 1),
-                "title", new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2),
-                "body", new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType(), 3)));
+                "userid", new JsonPlaceholderColumnHandle("userid", BIGINT),
+                "id", new JsonPlaceholderColumnHandle("id", BIGINT),
+                "title", new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType()),
+                "body", new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType())));
 
         // unknown table
         assertThatThrownBy(() -> metadata.getColumnHandles(SESSION, new JsonPlaceholderTableHandle("unknown", "unknown", TupleDomain.all())))
@@ -124,8 +126,8 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void getColumnMetadata()
     {
-        assertThat(metadata.getColumnMetadata(SESSION, POSTS_TABLE_HANDLE, new JsonPlaceholderColumnHandle("userid", BIGINT, 0))).isEqualTo(new ColumnMetadata("userid", BIGINT));
-        assertThat(metadata.getColumnMetadata(SESSION, POSTS_TABLE_HANDLE, new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2))).isEqualTo(new ColumnMetadata("title", createUnboundedVarcharType()));
+        assertThat(metadata.getColumnMetadata(SESSION, POSTS_TABLE_HANDLE, new JsonPlaceholderColumnHandle("userid", BIGINT))).isEqualTo(new ColumnMetadata("userid", BIGINT));
+        assertThat(metadata.getColumnMetadata(SESSION, POSTS_TABLE_HANDLE, new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType()))).isEqualTo(new ColumnMetadata("title", createUnboundedVarcharType()));
 
         // example connector assumes that the table handle and column handle are
         // properly formed, so it will return a metadata object for any
@@ -152,5 +154,40 @@ public class TestJsonPlaceholderMetadata
     {
         assertThatThrownBy(() -> metadata.dropTable(SESSION, POSTS_TABLE_HANDLE))
                 .isInstanceOf(TrinoException.class);
+    }
+
+    @Test
+    public void testGetTableHandleForComments()
+    {
+        assertThat(metadata.getTableHandle(SESSION, new SchemaTableName("default", "comments"), Optional.empty(), Optional.empty())).isEqualTo(COMMENTS_TABLE_HANDLE);
+    }
+
+    @Test
+    public void testGetColumnHandlesForComments()
+    {
+        assertThat(metadata.getColumnHandles(SESSION, COMMENTS_TABLE_HANDLE)).isEqualTo(ImmutableMap.of(
+                "postid", new JsonPlaceholderColumnHandle("postid", BIGINT),
+                "id", new JsonPlaceholderColumnHandle("id", BIGINT),
+                "name", new JsonPlaceholderColumnHandle("name", createUnboundedVarcharType()),
+                "email", new JsonPlaceholderColumnHandle("email", createUnboundedVarcharType()),
+                "body", new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType())));
+    }
+
+    @Test
+    public void testApplyFilterForCommentsTable()
+    {
+        JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT);
+        Domain domain = Domain.singleValue(BIGINT, 1L);
+        TupleDomain<io.trino.spi.connector.ColumnHandle> summary = TupleDomain.withColumnDomains(
+                ImmutableMap.of(postIdColumn, domain));
+        io.trino.spi.connector.Constraint constraint = new io.trino.spi.connector.Constraint(summary);
+
+        Optional<io.trino.spi.connector.ConstraintApplicationResult<io.trino.spi.connector.ConnectorTableHandle>> result =
+                metadata.applyFilter(SESSION, COMMENTS_TABLE_HANDLE, constraint);
+
+        assertThat(result).isPresent();
+        JsonPlaceholderTableHandle newHandle = (JsonPlaceholderTableHandle) result.get().getHandle();
+        assertThat(newHandle.getConstraint().getDomains()).isPresent();
+        assertThat(newHandle.getConstraint().getDomains().get()).containsKey(postIdColumn);
     }
 }

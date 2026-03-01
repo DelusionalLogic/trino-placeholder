@@ -13,6 +13,7 @@
  */
 package io.trino.plugin.jsonplaceholder;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import io.trino.plugin.jsonplaceholder.filter.CommentsFilterApplier;
 import io.trino.plugin.jsonplaceholder.filter.FilterApplier;
@@ -22,31 +23,38 @@ import io.trino.spi.connector.ConnectorSession;
 import io.trino.spi.connector.ConnectorSplit;
 import io.trino.spi.connector.ConnectorSplitManager;
 import io.trino.spi.connector.ConnectorSplitSource;
+import io.trino.spi.connector.ConnectorSplitSource.ConnectorSplitBatch;
 import io.trino.spi.connector.ConnectorTableHandle;
 import io.trino.spi.connector.ConnectorTransactionHandle;
 import io.trino.spi.connector.Constraint;
 import io.trino.spi.connector.DynamicFilter;
-import io.trino.spi.connector.FixedSplitSource;
 import io.trino.spi.connector.TableNotFoundException;
 import io.trino.spi.predicate.TupleDomain;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 
 import static io.trino.spi.StandardErrorCode.INVALID_ROW_FILTER;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class JsonPlaceholderSplitManager
         implements ConnectorSplitManager
 {
-    private final JsonPlaceholderClient exampleClient;
+    private static final Logger log = Logger.getLogger(JsonPlaceholderSplitManager.class.getName());
+    private static final ConnectorSplitBatch EMPTY_BATCH = new ConnectorSplitBatch(ImmutableList.of(), false);
+
+    private final JsonPlaceholderClient client;
+    private final JsonPlaceholderMetadata meta;
 
     @Inject
-    public JsonPlaceholderSplitManager(JsonPlaceholderClient exampleClient)
+    public JsonPlaceholderSplitManager(JsonPlaceholderClient client, JsonPlaceholderMetadata meta)
     {
-        this.exampleClient = requireNonNull(exampleClient, "exampleClient is null");
+        this.client = requireNonNull(client);
+        this.meta = requireNonNull(meta);
     }
 
     @Override
@@ -58,49 +66,97 @@ public class JsonPlaceholderSplitManager
             Constraint constraint)
     {
         JsonPlaceholderTableHandle tableHandle = (JsonPlaceholderTableHandle) connectorTableHandle;
-        JsonPlaceholderTable table = exampleClient.getTable(tableHandle.getSchemaName(), tableHandle.getTableName());
-
-        // this can happen if table is removed during a query
-        if (table == null) {
-            throw new TableNotFoundException(tableHandle.toSchemaTableName());
-        }
-
-        List<ConnectorSplit> splits = new ArrayList<>();
-        for (URI uri : table.getSources()) {
-            String uriString = uri.toString();
-
-            // Handle URI templates for comments table
-            if (tableHandle.getTableName().equals("comments")) {
-                uriString = resolveUriTemplate(uriString, tableHandle);
-            }
-
-            splits.add(new JsonPlaceholderSplit(uriString));
-        }
-        Collections.shuffle(splits);
-
-        return new FixedSplitSource(splits);
+        return new DynamicFilteringSplitSource(client, meta, session, tableHandle, dynamicFilter, new CommentsFilterApplier());
     }
 
-    private String resolveUriTemplate(String uriTemplate, JsonPlaceholderTableHandle tableHandle)
+    private static class DynamicFilteringSplitSource
+            implements ConnectorSplitSource
     {
-        // For comments table, extract the postid filter value
-        if (uriTemplate.contains("__POSTID__")) {
-            FilterApplier filterApplier = new CommentsFilterApplier();
-            TupleDomain<ColumnHandle> constraint = tableHandle.getConstraint();
+        private static final Logger log = Logger.getLogger(DynamicFilteringSplitSource.class.getName());
 
-            // Create a temporary column handle to extract the filter
-            JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", io.trino.spi.type.BigintType.BIGINT, 0);
-            Object postId = filterApplier.getFilter(postIdColumn, constraint);
+        private final JsonPlaceholderClient client;
+        private final JsonPlaceholderMetadata meta;
+        private final ConnectorSession session;
+        private final JsonPlaceholderTableHandle tableHandle;
+        private final DynamicFilter filter;
+        private final FilterApplier applier;
 
-            if (postId == null) {
-                throw new TrinoException(INVALID_ROW_FILTER,
-                        "Missing required filter: comments table requires a filter on postid column. " +
-                                "Example: SELECT * FROM comments WHERE postid = 1");
-            }
-
-            return uriTemplate.replace("__POSTID__", postId.toString());
+        DynamicFilteringSplitSource(
+                JsonPlaceholderClient client,
+                JsonPlaceholderMetadata meta,
+                ConnectorSession session,
+                JsonPlaceholderTableHandle tableHandle,
+                DynamicFilter filter,
+                FilterApplier applier)
+        {
+            this.client = requireNonNull(client);
+            this.meta = requireNonNull(meta);
+            this.session = requireNonNull(session);
+            this.tableHandle = requireNonNull(tableHandle);
+            this.filter = requireNonNull(filter);
+            this.applier = requireNonNull(applier);
         }
 
-        return uriTemplate;
+        @Override
+        public CompletableFuture<ConnectorSplitBatch> getNextBatch(int maxSize)
+        {
+            log.warning(format("Dyamic Filter awaitable (%s)", filter.isAwaitable()));
+            if (filter.isAwaitable()) {
+                return filter.isBlocked()
+                    .thenApply(_ -> EMPTY_BATCH);
+            }
+
+            log.warning(format("DynamicFilter has resolved (awaitable %s) (constraint %s)", filter.isAwaitable(), filter.getCurrentPredicate()));
+
+            JsonPlaceholderTable table = client.getTable(tableHandle.getSchemaName(), tableHandle.getTableName());
+
+            if (table == null) {
+                throw new TableNotFoundException(tableHandle.toSchemaTableName());
+            }
+
+            List<ConnectorSplit> splits = new ArrayList<>();
+            for (URI uri : table.getSources()) {
+                String uriString = uri.toString();
+
+                // Handle URI templates for comments table
+                if (tableHandle.getTableName().equals("comments")) {
+                    FilterApplier filterApplier = new CommentsFilterApplier();
+                    TupleDomain<ColumnHandle> tableConstraint = tableHandle.getConstraint();
+                    tableConstraint = tableConstraint.intersect(filter.getCurrentPredicate());
+
+                    JsonPlaceholderColumnHandle postIdColumn = (JsonPlaceholderColumnHandle) meta.getColumnHandles(session, tableHandle).get("postid");
+                    var postId = filterApplier.getFilterAll(postIdColumn, tableConstraint);
+
+                    if (postId == null) {
+                        throw new TrinoException(INVALID_ROW_FILTER, "Missing required filter: postid");
+                    }
+
+                    for (var id : postId) {
+                        splits.add(new JsonPlaceholderSplit(uriString.replace("__POSTID__", id.toString())));
+                    }
+                }
+                else {
+                    splits.add(new JsonPlaceholderSplit(uriString));
+                }
+            }
+
+            return CompletableFuture.completedFuture(new ConnectorSplitBatch(splits, true));
+        }
+
+        @Override
+        public boolean isFinished()
+        {
+            if (filter.isAwaitable()) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public void close()
+        {
+            // Nothing to do
+        }
     }
 }

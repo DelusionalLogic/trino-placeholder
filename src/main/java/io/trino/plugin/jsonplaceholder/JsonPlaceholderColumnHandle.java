@@ -19,7 +19,8 @@ import io.trino.spi.connector.ColumnHandle;
 import io.trino.spi.connector.ColumnMetadata;
 import io.trino.spi.type.Type;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
+import java.util.Objects;
+
 import static java.util.Objects.requireNonNull;
 
 public final class JsonPlaceholderColumnHandle
@@ -27,17 +28,14 @@ public final class JsonPlaceholderColumnHandle
 {
     private final String columnName;
     private final Type columnType;
-    private final int ordinalPosition;
 
     @JsonCreator
     public JsonPlaceholderColumnHandle(
             @JsonProperty("columnName") String columnName,
-            @JsonProperty("columnType") Type columnType,
-            @JsonProperty("ordinalPosition") int ordinalPosition)
+            @JsonProperty("columnType") Type columnType)
     {
         this.columnName = requireNonNull(columnName, "columnName is null");
         this.columnType = requireNonNull(columnType, "columnType is null");
-        this.ordinalPosition = ordinalPosition;
     }
 
     @JsonProperty
@@ -52,12 +50,6 @@ public final class JsonPlaceholderColumnHandle
         return columnType;
     }
 
-    @JsonProperty
-    public int getOrdinalPosition()
-    {
-        return ordinalPosition;
-    }
-
     public ColumnMetadata getColumnMetadata()
     {
         return new ColumnMetadata(columnName, columnType);
@@ -66,7 +58,7 @@ public final class JsonPlaceholderColumnHandle
     @Override
     public int hashCode()
     {
-        return columnName.hashCode();
+        return Objects.hash(columnName);
     }
 
     @Override
@@ -81,15 +73,5 @@ public final class JsonPlaceholderColumnHandle
 
         JsonPlaceholderColumnHandle other = (JsonPlaceholderColumnHandle) obj;
         return columnName.equals(other.columnName);
-    }
-
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("columnName", columnName)
-                .add("columnType", columnType)
-                .add("ordinalPosition", ordinalPosition)
-                .toString();
     }
 }

@@ -43,15 +43,15 @@ public class TestJsonPlaceholderRecordSet
     public void testGetColumnTypes()
     {
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
-                new JsonPlaceholderColumnHandle("userid", BIGINT, 0),
-                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
-                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2),
-                new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType(), 3)));
+                new JsonPlaceholderColumnHandle("userid", BIGINT),
+                new JsonPlaceholderColumnHandle("id", BIGINT),
+                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType()),
+                new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType())));
         assertThat(recordSet.getColumnTypes()).isEqualTo(ImmutableList.of(BIGINT, BIGINT, createUnboundedVarcharType(), createUnboundedVarcharType()));
 
         recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
-                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
-                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2)));
+                new JsonPlaceholderColumnHandle("id", BIGINT),
+                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType())));
         assertThat(recordSet.getColumnTypes()).isEqualTo(ImmutableList.of(BIGINT, createUnboundedVarcharType()));
 
         recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of());
@@ -62,9 +62,9 @@ public class TestJsonPlaceholderRecordSet
     public void testCursorSimple()
     {
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
-                new JsonPlaceholderColumnHandle("userid", BIGINT, 0),
-                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
-                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2)));
+                new JsonPlaceholderColumnHandle("userid", BIGINT),
+                new JsonPlaceholderColumnHandle("id", BIGINT),
+                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType())));
         RecordCursor cursor = recordSet.cursor();
 
         assertThat(cursor.getType(0)).isEqualTo(BIGINT);
@@ -96,9 +96,9 @@ public class TestJsonPlaceholderRecordSet
     public void testCursorMixedOrder()
     {
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
-                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2),
-                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
-                new JsonPlaceholderColumnHandle("userid", BIGINT, 0)));
+                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType()),
+                new JsonPlaceholderColumnHandle("id", BIGINT),
+                new JsonPlaceholderColumnHandle("userid", BIGINT)));
         RecordCursor cursor = recordSet.cursor();
 
         Map<Long, String> data = new LinkedHashMap<>();
@@ -123,8 +123,8 @@ public class TestJsonPlaceholderRecordSet
     public void testCursorWithBody()
     {
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
-                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
-                new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType(), 3)));
+                new JsonPlaceholderColumnHandle("id", BIGINT),
+                new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType())));
         RecordCursor cursor = recordSet.cursor();
 
         int count = 0;
@@ -150,10 +150,10 @@ public class TestJsonPlaceholderRecordSet
     public void testCursorAllColumns()
     {
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
-                new JsonPlaceholderColumnHandle("userid", BIGINT, 0),
-                new JsonPlaceholderColumnHandle("id", BIGINT, 1),
-                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType(), 2),
-                new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType(), 3)));
+                new JsonPlaceholderColumnHandle("userid", BIGINT),
+                new JsonPlaceholderColumnHandle("id", BIGINT),
+                new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType()),
+                new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType())));
         RecordCursor cursor = recordSet.cursor();
 
         int count = 0;

@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class TestJsonPlaceholderColumnHandle
 {
-    private final JsonPlaceholderColumnHandle columnHandle = new JsonPlaceholderColumnHandle("columnName", createUnboundedVarcharType(), 0);
+    private final JsonPlaceholderColumnHandle columnHandle = new JsonPlaceholderColumnHandle("columnName", createUnboundedVarcharType());
 
     @Test
     public void testJsonRoundTrip()
@@ -38,13 +38,13 @@ public class TestJsonPlaceholderColumnHandle
     {
         EquivalenceTester.equivalenceTester()
                 .addEquivalentGroup(
-                        new JsonPlaceholderColumnHandle("columnName", createUnboundedVarcharType(), 0),
-                        new JsonPlaceholderColumnHandle("columnName", BIGINT, 0),
-                        new JsonPlaceholderColumnHandle("columnName", createUnboundedVarcharType(), 1))
+                        new JsonPlaceholderColumnHandle("columnName", createUnboundedVarcharType()),
+                        new JsonPlaceholderColumnHandle("columnName", BIGINT),
+                        new JsonPlaceholderColumnHandle("columnName", createUnboundedVarcharType()))
                 .addEquivalentGroup(
-                        new JsonPlaceholderColumnHandle("columnNameX", createUnboundedVarcharType(), 0),
-                        new JsonPlaceholderColumnHandle("columnNameX", BIGINT, 0),
-                        new JsonPlaceholderColumnHandle("columnNameX", createUnboundedVarcharType(), 1))
+                        new JsonPlaceholderColumnHandle("columnNameX", createUnboundedVarcharType()),
+                        new JsonPlaceholderColumnHandle("columnNameX", BIGINT),
+                        new JsonPlaceholderColumnHandle("columnNameX", createUnboundedVarcharType()))
                 .check();
     }
 }

@@ -27,6 +27,7 @@ import io.trino.spi.predicate.TupleDomain;
 import io.trino.spi.predicate.ValueSet;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -48,7 +49,7 @@ public class TestCommentsFilterApplier
     @Test
     public void testApplyFilterWithPostId()
     {
-        JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT, 0);
+        JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT);
         Map<String, ColumnHandle> columns = ImmutableMap.of("postid", postIdColumn);
 
         JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
@@ -75,7 +76,7 @@ public class TestCommentsFilterApplier
     @Test
     public void testApplyFilterWithoutPostId()
     {
-        JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT, 0);
+        JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT);
         Map<String, ColumnHandle> columns = ImmutableMap.of("postid", postIdColumn);
 
         JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
@@ -92,7 +93,7 @@ public class TestCommentsFilterApplier
     @Test
     public void testGetFilterReturnsNull()
     {
-        JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT, 0);
+        JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT);
         TupleDomain<ColumnHandle> emptyConstraint = TupleDomain.all();
 
         Object filterValue = filterApplier.getFilter(postIdColumn, emptyConstraint);
@@ -100,18 +101,17 @@ public class TestCommentsFilterApplier
     }
 
     @Test
-    public void testApplyFilterDoesNotSupportMultipleValues()
+    public void testApplyFilterMultipleDistinctSingularRanges()
     {
-        JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT, 0);
+        JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT);
         Map<String, ColumnHandle> columns = ImmutableMap.of("postid", postIdColumn);
 
         JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
 
-        // Create constraint with postid IN (1, 2) - not supported
         Domain domain = Domain.create(
                 ValueSet.ofRanges(
                         io.trino.spi.predicate.Range.equal(BIGINT, 1L),
-                        io.trino.spi.predicate.Range.equal(BIGINT, 2L)),
+                        io.trino.spi.predicate.Range.equal(BIGINT, 3L)),
                 false);
         TupleDomain<ColumnHandle> summary = TupleDomain.withColumnDomains(
                 ImmutableMap.of(postIdColumn, domain));
@@ -120,7 +120,41 @@ public class TestCommentsFilterApplier
         Optional<ConstraintApplicationResult<ConnectorTableHandle>> result =
                 filterApplier.applyFilter(tableHandle, columns, constraint);
 
-        // Should not apply filter for multi-value domains
-        assertThat(result).isEmpty();
+        assertThat(result).isPresent();
+        JsonPlaceholderTableHandle newHandle = (JsonPlaceholderTableHandle) result.get().getHandle();
+        assertThat(newHandle.getConstraint().getDomains()).isPresent();
+        assertThat(newHandle.getConstraint().getDomains().get()).containsKey(postIdColumn);
+
+        Object filterValue = filterApplier.getFilterAll(postIdColumn, newHandle.getConstraint());
+        assertThat(filterValue).isEqualTo(List.of(1L, 3L));
+    }
+
+    @Test
+    public void testApplyFilterSingleBounded()
+    {
+        JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT);
+        Map<String, ColumnHandle> columns = ImmutableMap.of("postid", postIdColumn);
+
+        JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
+
+        // Trino prefers this form of the expression over disjoin values
+        Domain domain = Domain.create(
+                ValueSet.ofRanges(
+                        io.trino.spi.predicate.Range.range(BIGINT, 1L, true, 2L, true)),
+                false);
+        TupleDomain<ColumnHandle> summary = TupleDomain.withColumnDomains(
+                ImmutableMap.of(postIdColumn, domain));
+        Constraint constraint = new Constraint(summary);
+
+        Optional<ConstraintApplicationResult<ConnectorTableHandle>> result =
+                filterApplier.applyFilter(tableHandle, columns, constraint);
+
+        assertThat(result).isPresent();
+        JsonPlaceholderTableHandle newHandle = (JsonPlaceholderTableHandle) result.get().getHandle();
+        assertThat(newHandle.getConstraint().getDomains()).isPresent();
+        assertThat(newHandle.getConstraint().getDomains().get()).containsKey(postIdColumn);
+
+        Object filterValue = filterApplier.getFilterAll(postIdColumn, newHandle.getConstraint());
+        assertThat(filterValue).isEqualTo(List.of(1L, 2L));
     }
 }
