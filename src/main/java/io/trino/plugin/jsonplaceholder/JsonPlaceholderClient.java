@@ -16,6 +16,7 @@ package io.trino.plugin.jsonplaceholder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
+import io.trino.spi.connector.SchemaTableName;
 
 import java.net.URI;
 import java.util.Set;
@@ -26,7 +27,7 @@ import static java.util.Objects.requireNonNull;
 
 public class JsonPlaceholderClient
 {
-    private static final String SCHEMA_NAME = "default";
+    static final String SCHEMA_NAME = "default";
     private static final String POSTS_TABLE_NAME = "posts";
     private static final String COMMENTS_TABLE_NAME = "comments";
 
@@ -80,6 +81,16 @@ public class JsonPlaceholderClient
             return ImmutableSet.of();
         }
         return ImmutableSet.of(POSTS_TABLE_NAME, COMMENTS_TABLE_NAME);
+    }
+
+    public JsonPlaceholderTable getTable(JsonPlaceholderTableHandle handle)
+    {
+        return getTable(handle.getSchemaName(), handle.getTableName());
+    }
+
+    public JsonPlaceholderTable getTable(SchemaTableName name)
+    {
+        return getTable(name.getSchemaName(), name.getTableName());
     }
 
     public JsonPlaceholderTable getTable(String schema, String tableName)

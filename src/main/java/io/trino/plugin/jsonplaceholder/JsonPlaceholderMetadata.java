@@ -81,7 +81,7 @@ public class JsonPlaceholderMetadata
             return null;
         }
 
-        JsonPlaceholderTable table = exampleClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+        JsonPlaceholderTable table = exampleClient.getTable(tableName);
         if (table == null) {
             return null;
         }
@@ -115,7 +115,7 @@ public class JsonPlaceholderMetadata
     {
         JsonPlaceholderTableHandle exampleTableHandle = (JsonPlaceholderTableHandle) tableHandle;
 
-        JsonPlaceholderTable table = exampleClient.getTable(exampleTableHandle.getSchemaName(), exampleTableHandle.getTableName());
+        JsonPlaceholderTable table = exampleClient.getTable(exampleTableHandle);
         if (table == null) {
             throw new TableNotFoundException(exampleTableHandle.toSchemaTableName());
         }
@@ -145,16 +145,12 @@ public class JsonPlaceholderMetadata
 
     private ConnectorTableMetadata getTableMetadata(SchemaTableName tableName)
     {
-        if (!listSchemaNames().contains(tableName.getSchemaName())) {
-            return null;
-        }
-
-        JsonPlaceholderTable table = exampleClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+        JsonPlaceholderTable table = exampleClient.getTable(tableName);
         if (table == null) {
             return null;
         }
 
-        return new ConnectorTableMetadata(tableName, table.getColumnsMetadata());
+        return table.asMetadata(tableName.getSchemaName());
     }
 
     private List<SchemaTableName> listTables(ConnectorSession session, SchemaTablePrefix prefix)

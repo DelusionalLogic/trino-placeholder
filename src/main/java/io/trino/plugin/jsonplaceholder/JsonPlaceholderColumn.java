@@ -13,8 +13,7 @@
  */
 package io.trino.plugin.jsonplaceholder;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import io.trino.spi.connector.ColumnMetadata;
 import io.trino.spi.type.Type;
 
 import java.util.Objects;
@@ -28,23 +27,20 @@ public final class JsonPlaceholderColumn
     private final String name;
     private final Type type;
 
-    @JsonCreator
     public JsonPlaceholderColumn(
-            @JsonProperty("name") String name,
-            @JsonProperty("type") Type type)
+            String name,
+            Type type)
     {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = name;
         this.type = requireNonNull(type, "type is null");
     }
 
-    @JsonProperty
     public String getName()
     {
         return name;
     }
 
-    @JsonProperty
     public Type getType()
     {
         return type;
@@ -75,5 +71,10 @@ public final class JsonPlaceholderColumn
     public String toString()
     {
         return name + ":" + type;
+    }
+
+    public ColumnMetadata asMetadata()
+    {
+        return new ColumnMetadata(name, type);
     }
 }

@@ -15,10 +15,7 @@ package io.trino.plugin.jsonplaceholder;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import io.trino.spi.TrinoException;
-import io.trino.spi.connector.ColumnHandle;
 import io.trino.spi.connector.ConnectorSession;
-import io.trino.spi.connector.ConnectorSplit;
 import io.trino.spi.connector.ConnectorSplitManager;
 import io.trino.spi.connector.ConnectorSplitSource;
 import io.trino.spi.connector.ConnectorSplitSource.ConnectorSplitBatch;
@@ -27,16 +24,10 @@ import io.trino.spi.connector.ConnectorTransactionHandle;
 import io.trino.spi.connector.Constraint;
 import io.trino.spi.connector.DynamicFilter;
 import io.trino.spi.connector.TableNotFoundException;
-import io.trino.spi.predicate.Domain;
-import io.trino.spi.predicate.TupleDomain;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
-import static io.trino.spi.StandardErrorCode.INVALID_ROW_FILTER;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -103,42 +94,18 @@ public class JsonPlaceholderSplitManager
 
             log.warning(format("DynamicFilter has resolved (awaitable %s) (constraint %s)", filter.isAwaitable(), filter.getCurrentPredicate()));
 
-            JsonPlaceholderTable table = client.getTable(tableHandle.getSchemaName(), tableHandle.getTableName());
-
+            JsonPlaceholderTable table = client.getTable(tableHandle);
             if (table == null) {
                 throw new TableNotFoundException(tableHandle.toSchemaTableName());
             }
 
-            List<ConnectorSplit> splits = new ArrayList<>();
-            for (URI uri : table.getSources()) {
-                String uriString = uri.toString();
+            var tableConstraint = tableHandle.getConstraint();
+            tableConstraint = tableConstraint.intersect(filter.getCurrentPredicate());
 
-                // Handle URI templates for comments table
-                if (tableHandle.getTableName().equals("comments")) {
-                    TupleDomain<ColumnHandle> tableConstraint = tableHandle.getConstraint();
-                    tableConstraint = tableConstraint.intersect(filter.getCurrentPredicate());
+            var columns = meta.getColumnHandles(session, tableHandle);
+            var page = table.getPage(session, meta, columns, tableConstraint);
 
-                    JsonPlaceholderColumnHandle postIdColumn = (JsonPlaceholderColumnHandle) meta.getColumnHandles(session, tableHandle).get("postid");
-
-                    if (!tableConstraint.getDomains().isPresent()) {
-                        throw new TrinoException(INVALID_ROW_FILTER, "Missing required filter: postid");
-                    }
-
-                    Domain domain = tableConstraint.getDomains().get().get(postIdColumn);
-                    if (domain == null) {
-                        throw new TrinoException(INVALID_ROW_FILTER, "Missing required filter: postid");
-                    }
-
-                    for (var id : domain.getValues().tryExpandRanges(1024).get()) {
-                        splits.add(new JsonPlaceholderSplit(uriString.replace("__POSTID__", id.toString())));
-                    }
-                }
-                else {
-                    splits.add(new JsonPlaceholderSplit(uriString));
-                }
-            }
-
-            return CompletableFuture.completedFuture(new ConnectorSplitBatch(splits, true));
+            return CompletableFuture.completedFuture(new ConnectorSplitBatch(page, true));
         }
 
         @Override

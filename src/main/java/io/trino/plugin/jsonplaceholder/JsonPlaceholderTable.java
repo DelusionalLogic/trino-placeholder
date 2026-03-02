@@ -13,56 +13,54 @@
  */
 package io.trino.plugin.jsonplaceholder;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
+import io.trino.spi.TrinoException;
+import io.trino.spi.connector.ColumnHandle;
 import io.trino.spi.connector.ColumnMetadata;
+import io.trino.spi.connector.ConnectorSession;
+import io.trino.spi.connector.ConnectorSplit;
+import io.trino.spi.connector.ConnectorTableMetadata;
+import io.trino.spi.connector.SchemaTableName;
+import io.trino.spi.predicate.Domain;
+import io.trino.spi.predicate.TupleDomain;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static io.trino.spi.StandardErrorCode.INVALID_ROW_FILTER;
 import static java.util.Objects.requireNonNull;
 
 public class JsonPlaceholderTable
 {
     private final String name;
     private final List<JsonPlaceholderColumn> columns;
-    private final List<ColumnMetadata> columnsMetadata;
     private final List<URI> sources;
 
-    @JsonCreator
     public JsonPlaceholderTable(
-            @JsonProperty("name") String name,
-            @JsonProperty("columns") List<JsonPlaceholderColumn> columns,
-            @JsonProperty("sources") List<URI> sources)
+            String name,
+            List<JsonPlaceholderColumn> columns,
+            List<URI> sources)
     {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = requireNonNull(name, "name is null");
         this.columns = ImmutableList.copyOf(requireNonNull(columns, "columns is null"));
         this.sources = ImmutableList.copyOf(requireNonNull(sources, "sources is null"));
-
-        ImmutableList.Builder<ColumnMetadata> columnsMetadata = ImmutableList.builder();
-        for (JsonPlaceholderColumn column : this.columns) {
-            columnsMetadata.add(new ColumnMetadata(column.getName(), column.getType()));
-        }
-        this.columnsMetadata = columnsMetadata.build();
     }
 
-    @JsonProperty
     public String getName()
     {
         return name;
     }
 
-    @JsonProperty
     public List<JsonPlaceholderColumn> getColumns()
     {
         return columns;
     }
 
-    @JsonProperty
     public List<URI> getSources()
     {
         return sources;
@@ -70,6 +68,46 @@ public class JsonPlaceholderTable
 
     public List<ColumnMetadata> getColumnsMetadata()
     {
-        return columnsMetadata;
+        ImmutableList.Builder<ColumnMetadata> columnsMetadata = ImmutableList.builder();
+        for (JsonPlaceholderColumn column : this.columns) {
+            columnsMetadata.add(column.asMetadata());
+        }
+        return columnsMetadata.build();
+    }
+
+    public ConnectorTableMetadata asMetadata(String schema)
+    {
+        return new ConnectorTableMetadata(new SchemaTableName(schema, name), getColumnsMetadata());
+    }
+
+    public List<ConnectorSplit> getPage(ConnectorSession session, JsonPlaceholderMetadata meta, Map<String, ColumnHandle> columns, TupleDomain<ColumnHandle> tableConstraint)
+    {
+        List<ConnectorSplit> splits = new ArrayList<>();
+        for (var uri : getSources()) {
+            String uriString = uri.toString();
+
+            // Handle URI templates for comments table
+            if (name.equals("comments")) {
+                var postIdColumn = columns.get("postid");
+
+                if (!tableConstraint.getDomains().isPresent()) {
+                    throw new TrinoException(INVALID_ROW_FILTER, "Missing required filter: postid");
+                }
+
+                Domain domain = tableConstraint.getDomains().get().get(postIdColumn);
+                if (domain == null) {
+                    throw new TrinoException(INVALID_ROW_FILTER, "Missing required filter: postid");
+                }
+
+                for (var id : domain.getValues().tryExpandRanges(1024).get()) {
+                    splits.add(new JsonPlaceholderSplit(uriString.replace("__POSTID__", id.toString())));
+                }
+            }
+            else {
+                splits.add(new JsonPlaceholderSplit(uriString));
+            }
+        }
+
+        return splits;
     }
 }

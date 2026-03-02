@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 
-import static io.trino.plugin.jsonplaceholder.MetadataUtil.TABLE_CODEC;
 import static io.trino.spi.type.BigintType.BIGINT;
 import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,16 +35,5 @@ public class TestJsonPlaceholderTable
         assertThat(exampleTable.getColumnsMetadata()).isEqualTo(ImmutableList.of(
                 new ColumnMetadata("a", createUnboundedVarcharType()),
                 new ColumnMetadata("b", BIGINT)));
-    }
-
-    @Test
-    public void testRoundTrip()
-    {
-        String json = TABLE_CODEC.toJson(exampleTable);
-        JsonPlaceholderTable exampleTableCopy = TABLE_CODEC.fromJson(json);
-
-        assertThat(exampleTableCopy.getName()).isEqualTo(exampleTable.getName());
-        assertThat(exampleTableCopy.getColumns()).isEqualTo(exampleTable.getColumns());
-        assertThat(exampleTableCopy.getSources()).isEqualTo(exampleTable.getSources());
     }
 }
