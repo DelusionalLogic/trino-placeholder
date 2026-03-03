@@ -35,10 +35,10 @@ public class TestJsonPlaceholderConfig
     @Test
     public void testExplicitPropertyMappings()
     {
-        Map<String, String> properties = ImmutableMap.of("api-base-uri", "https://jsonplaceholder.typicode.com");
+        Map<String, String> properties = ImmutableMap.of("api-base-uri", "https://api.example.local");
 
         JsonPlaceholderConfig expected = new JsonPlaceholderConfig()
-                .setApiBaseUri(URI.create("https://jsonplaceholder.typicode.com"));
+                .setApiBaseUri(URI.create("https://api.example.local"));
 
         assertFullMapping(properties, expected);
     }

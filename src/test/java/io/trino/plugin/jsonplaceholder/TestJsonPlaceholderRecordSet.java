@@ -17,8 +17,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.trino.spi.connector.RecordCursor;
 import io.trino.spi.connector.RecordSet;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.parallel.Execution;
@@ -37,12 +35,12 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 @Execution(CONCURRENT)
 public class TestJsonPlaceholderRecordSet
 {
-    private JsonPlaceholderHttpServer exampleHttpServer;
-    private URI dataUri;
-
     @Test
     public void testGetColumnTypes()
     {
+        JsonPlaceholderHttpServer exampleHttpServer = new JsonPlaceholderHttpServer();
+        URI dataUri = exampleHttpServer.getUri().resolve("/posts");
+
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
                 new JsonPlaceholderColumnHandle("userid", BIGINT),
                 new JsonPlaceholderColumnHandle("id", BIGINT),
@@ -57,11 +55,16 @@ public class TestJsonPlaceholderRecordSet
 
         recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of());
         assertThat(recordSet.getColumnTypes()).isEqualTo(ImmutableList.of());
+
+        exampleHttpServer.stop();
     }
 
     @Test
     public void testCursorSimple()
     {
+        JsonPlaceholderHttpServer exampleHttpServer = new JsonPlaceholderHttpServer();
+        URI dataUri = exampleHttpServer.getUri().resolve("/posts");
+
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
                 new JsonPlaceholderColumnHandle("userid", BIGINT),
                 new JsonPlaceholderColumnHandle("id", BIGINT),
@@ -91,11 +94,16 @@ public class TestJsonPlaceholderRecordSet
                 .put(9L, "nesciunt iure omnis dolorem tempora et accusantium")
                 .put(10L, "optio molestias id quia eum")
                 .buildOrThrow());
+
+        exampleHttpServer.stop();
     }
 
     @Test
     public void testCursorMixedOrder()
     {
+        JsonPlaceholderHttpServer exampleHttpServer = new JsonPlaceholderHttpServer();
+        URI dataUri = exampleHttpServer.getUri().resolve("/posts");
+
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
                 new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType()),
                 new JsonPlaceholderColumnHandle("id", BIGINT),
@@ -118,11 +126,16 @@ public class TestJsonPlaceholderRecordSet
                 .put(9L, "nesciunt iure omnis dolorem tempora et accusantium")
                 .put(10L, "optio molestias id quia eum")
                 .buildOrThrow());
+
+        exampleHttpServer.stop();
     }
 
     @Test
     public void testCursorWithBody()
     {
+        JsonPlaceholderHttpServer exampleHttpServer = new JsonPlaceholderHttpServer();
+        URI dataUri = exampleHttpServer.getUri().resolve("/posts");
+
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
                 new JsonPlaceholderColumnHandle("id", BIGINT),
                 new JsonPlaceholderColumnHandle("body", createUnboundedVarcharType())));
@@ -145,11 +158,16 @@ public class TestJsonPlaceholderRecordSet
             }
         }
         assertThat(count).isEqualTo(10);
+
+        exampleHttpServer.stop();
     }
 
     @Test
     public void testCursorAllColumns()
     {
+        JsonPlaceholderHttpServer exampleHttpServer = new JsonPlaceholderHttpServer();
+        URI dataUri = exampleHttpServer.getUri().resolve("/posts");
+
         RecordSet recordSet = new JsonPlaceholderRecordSet(new JsonPlaceholderSplit(dataUri), ImmutableList.of(
                 new JsonPlaceholderColumnHandle("userid", BIGINT),
                 new JsonPlaceholderColumnHandle("id", BIGINT),
@@ -166,20 +184,7 @@ public class TestJsonPlaceholderRecordSet
             assertThat(cursor.getSlice(3).toStringUtf8()).isNotEmpty(); // body
         }
         assertThat(count).isEqualTo(10);
-    }
 
-    @BeforeAll
-    public void setUp()
-    {
-        exampleHttpServer = new JsonPlaceholderHttpServer();
-        dataUri = exampleHttpServer.getUri().resolve("/posts");
-    }
-
-    @AfterAll
-    public void tearDown()
-    {
-        if (exampleHttpServer != null) {
-            exampleHttpServer.stop();
-        }
+        exampleHttpServer.stop();
     }
 }

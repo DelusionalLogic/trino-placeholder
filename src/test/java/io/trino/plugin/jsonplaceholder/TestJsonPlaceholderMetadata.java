@@ -29,7 +29,6 @@ import io.trino.spi.connector.TableNotFoundException;
 import io.trino.spi.predicate.Domain;
 import io.trino.spi.predicate.TupleDomain;
 import io.trino.spi.predicate.ValueSet;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -48,26 +47,24 @@ public class TestJsonPlaceholderMetadata
 {
     private static final JsonPlaceholderTableHandle POSTS_TABLE_HANDLE = new JsonPlaceholderTableHandle("default", "posts", TupleDomain.all());
     private static final JsonPlaceholderTableHandle COMMENTS_TABLE_HANDLE = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
-    private JsonPlaceholderMetadata metadata;
-
-    @BeforeEach
-    public void setUp()
-            throws Exception
-    {
-        URI apiBaseUri = URI.create("https://jsonplaceholder.typicode.com");
-        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
-        metadata = new JsonPlaceholderMetadata(client);
-    }
 
     @Test
     public void testListSchemaNames()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         assertThat(metadata.listSchemaNames(SESSION)).containsExactlyElementsOf(ImmutableSet.of("default"));
     }
 
     @Test
     public void testGetTableHandle()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         assertThat(metadata.getTableHandle(SESSION, new SchemaTableName("default", "posts"), Optional.empty(), Optional.empty())).isEqualTo(POSTS_TABLE_HANDLE);
         assertThat(metadata.getTableHandle(SESSION, new SchemaTableName("default", "unknown"), Optional.empty(), Optional.empty())).isNull();
         assertThat(metadata.getTableHandle(SESSION, new SchemaTableName("unknown", "posts"), Optional.empty(), Optional.empty())).isNull();
@@ -77,6 +74,10 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void testGetColumnHandles()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         // known table
         assertThat(metadata.getColumnHandles(SESSION, POSTS_TABLE_HANDLE)).isEqualTo(ImmutableMap.of(
                 "userid", new JsonPlaceholderColumnHandle("userid", BIGINT),
@@ -96,6 +97,10 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void getTableMetadata()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         // known table
         ConnectorTableMetadata tableMetadata = metadata.getTableMetadata(SESSION, POSTS_TABLE_HANDLE);
         assertThat(tableMetadata.getTable()).isEqualTo(new SchemaTableName("default", "posts"));
@@ -114,6 +119,10 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void testListTables()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         // all schemas
         assertThat(ImmutableSet.copyOf(metadata.listTables(SESSION, Optional.empty()))).isEqualTo(ImmutableSet.of(
                 new SchemaTableName("default", "posts"),
@@ -131,6 +140,10 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void getColumnMetadata()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         assertThat(metadata.getColumnMetadata(SESSION, POSTS_TABLE_HANDLE, new JsonPlaceholderColumnHandle("userid", BIGINT))).isEqualTo(new ColumnMetadata("userid", BIGINT));
         assertThat(metadata.getColumnMetadata(SESSION, POSTS_TABLE_HANDLE, new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType()))).isEqualTo(new ColumnMetadata("title", createUnboundedVarcharType()));
 
@@ -144,6 +157,10 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void testCreateTable()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         assertThatThrownBy(() -> metadata.createTable(
                 SESSION,
                 new ConnectorTableMetadata(
@@ -157,6 +174,10 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void testDropTableTable()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         assertThatThrownBy(() -> metadata.dropTable(SESSION, POSTS_TABLE_HANDLE))
                 .isInstanceOf(TrinoException.class);
     }
@@ -164,12 +185,20 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void testGetTableHandleForComments()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         assertThat(metadata.getTableHandle(SESSION, new SchemaTableName("default", "comments"), Optional.empty(), Optional.empty())).isEqualTo(COMMENTS_TABLE_HANDLE);
     }
 
     @Test
     public void testGetColumnHandlesForComments()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         assertThat(metadata.getColumnHandles(SESSION, COMMENTS_TABLE_HANDLE)).isEqualTo(ImmutableMap.of(
                 "postid", new JsonPlaceholderColumnHandle("postid", BIGINT),
                 "id", new JsonPlaceholderColumnHandle("id", BIGINT),
@@ -181,6 +210,10 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void testApplyFilterForCommentsTable()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT);
         Domain domain = Domain.singleValue(BIGINT, 1L);
         TupleDomain<io.trino.spi.connector.ColumnHandle> summary = TupleDomain.withColumnDomains(
@@ -199,6 +232,10 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void testApplyFilterWithPostId()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT);
 
         JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
@@ -221,6 +258,10 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void testApplyFilterWithoutPostId()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT);
 
         JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
@@ -237,6 +278,10 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void testApplyFilterMultipleDistinctSingularRanges()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT);
 
         JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
@@ -262,6 +307,10 @@ public class TestJsonPlaceholderMetadata
     @Test
     public void testApplyFilterSingleBounded()
     {
+        URI apiBaseUri = URI.create("https://api.example.local");
+        JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
+        JsonPlaceholderMetadata metadata = new JsonPlaceholderMetadata(client);
+
         JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT);
 
         JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());

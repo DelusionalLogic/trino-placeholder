@@ -23,8 +23,6 @@ import io.trino.spi.connector.DynamicFilter;
 import io.trino.spi.connector.TableNotFoundException;
 import io.trino.spi.predicate.Domain;
 import io.trino.spi.predicate.TupleDomain;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.parallel.Execution;
@@ -42,32 +40,17 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 @Execution(CONCURRENT)
 public class TestJsonPlaceholderSplitManager
 {
-    private JsonPlaceholderHttpServer httpServer;
-    private JsonPlaceholderClient client;
-    private JsonPlaceholderMetadata meta;
-    private JsonPlaceholderSplitManager splitManager;
-
-    @BeforeAll
-    public void setUp()
-    {
-        httpServer = new JsonPlaceholderHttpServer();
-        JsonPlaceholderConfig config = new JsonPlaceholderConfig()
-                .setApiBaseUri(httpServer.getUri());
-        client = new JsonPlaceholderClient(config);
-        meta = new JsonPlaceholderMetadata(client);
-        splitManager = new JsonPlaceholderSplitManager(client, meta);
-    }
-
-    @AfterAll
-    public void tearDown()
-    {
-        httpServer.stop();
-    }
-
     @Test
     public void testGetSplitsForPostsTable()
             throws Exception
     {
+        JsonPlaceholderHttpServer httpServer = new JsonPlaceholderHttpServer();
+        JsonPlaceholderConfig config = new JsonPlaceholderConfig()
+                .setApiBaseUri(httpServer.getUri());
+        JsonPlaceholderClient client = new JsonPlaceholderClient(config);
+        JsonPlaceholderMetadata meta = new JsonPlaceholderMetadata(client);
+        JsonPlaceholderSplitManager splitManager = new JsonPlaceholderSplitManager(client, meta);
+
         JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "posts", TupleDomain.all());
 
         ConnectorSplitSource splitSource = splitManager.getSplits(
@@ -81,12 +64,21 @@ public class TestJsonPlaceholderSplitManager
         assertThat(splits).hasSize(1);
         JsonPlaceholderSplit split = (JsonPlaceholderSplit) splits.get(0);
         assertThat(split.getUri().getPath()).contains("/posts");
+
+        httpServer.stop();
     }
 
     @Test
     public void testGetSplitsForCommentsWithPostIdFilter()
             throws Exception
     {
+        JsonPlaceholderHttpServer httpServer = new JsonPlaceholderHttpServer();
+        JsonPlaceholderConfig config = new JsonPlaceholderConfig()
+                .setApiBaseUri(httpServer.getUri());
+        JsonPlaceholderClient client = new JsonPlaceholderClient(config);
+        JsonPlaceholderMetadata meta = new JsonPlaceholderMetadata(client);
+        JsonPlaceholderSplitManager splitManager = new JsonPlaceholderSplitManager(client, meta);
+
         // Create table handle with postid = 1 filter
         JsonPlaceholderColumnHandle postIdColumn = new JsonPlaceholderColumnHandle("postid", BIGINT);
         Domain domain = Domain.singleValue(BIGINT, 1L);
@@ -106,11 +98,20 @@ public class TestJsonPlaceholderSplitManager
         assertThat(splits).hasSize(1);
         JsonPlaceholderSplit split = (JsonPlaceholderSplit) splits.get(0);
         assertThat(split.getUri().getPath()).contains("/posts/1/comments");
+
+        httpServer.stop();
     }
 
     @Test
     public void testGetSplitsForCommentsWithoutFilterThrowsException()
     {
+        JsonPlaceholderHttpServer httpServer = new JsonPlaceholderHttpServer();
+        JsonPlaceholderConfig config = new JsonPlaceholderConfig()
+                .setApiBaseUri(httpServer.getUri());
+        JsonPlaceholderClient client = new JsonPlaceholderClient(config);
+        JsonPlaceholderMetadata meta = new JsonPlaceholderMetadata(client);
+        JsonPlaceholderSplitManager splitManager = new JsonPlaceholderSplitManager(client, meta);
+
         JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
 
         assertThatThrownBy(() -> splitManager.getSplits(
@@ -121,11 +122,20 @@ public class TestJsonPlaceholderSplitManager
                 Constraint.alwaysTrue())
                 .getNextBatch(10))
                 .isInstanceOf(TrinoException.class);
+
+        httpServer.stop();
     }
 
     @Test
     public void testGetSplitsForNonExistentTable()
     {
+        JsonPlaceholderHttpServer httpServer = new JsonPlaceholderHttpServer();
+        JsonPlaceholderConfig config = new JsonPlaceholderConfig()
+                .setApiBaseUri(httpServer.getUri());
+        JsonPlaceholderClient client = new JsonPlaceholderClient(config);
+        JsonPlaceholderMetadata meta = new JsonPlaceholderMetadata(client);
+        JsonPlaceholderSplitManager splitManager = new JsonPlaceholderSplitManager(client, meta);
+
         JsonPlaceholderTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "unknown", TupleDomain.all());
 
         assertThatThrownBy(() -> splitManager.getSplits(
@@ -136,5 +146,7 @@ public class TestJsonPlaceholderSplitManager
                 Constraint.alwaysTrue())
                 .getNextBatch(10))
                 .isInstanceOf(TableNotFoundException.class);
+
+        httpServer.stop();
     }
 }

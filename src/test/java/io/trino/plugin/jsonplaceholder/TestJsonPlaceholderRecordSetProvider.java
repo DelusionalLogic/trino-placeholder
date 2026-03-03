@@ -19,8 +19,6 @@ import io.trino.spi.connector.ConnectorTableHandle;
 import io.trino.spi.connector.RecordCursor;
 import io.trino.spi.connector.RecordSet;
 import io.trino.spi.predicate.TupleDomain;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.parallel.Execution;
@@ -40,12 +38,12 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 @Execution(CONCURRENT)
 public class TestJsonPlaceholderRecordSetProvider
 {
-    private JsonPlaceholderHttpServer exampleHttpServer;
-    private URI dataUri;
-
     @Test
     public void testGetRecordSet()
     {
+        JsonPlaceholderHttpServer exampleHttpServer = new JsonPlaceholderHttpServer();
+        URI dataUri = exampleHttpServer.getUri();
+
         ConnectorTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "posts", TupleDomain.all());
         JsonPlaceholderRecordSetProvider recordSetProvider = new JsonPlaceholderRecordSetProvider();
         RecordSet recordSet = recordSetProvider.getRecordSet(JsonPlaceholderTransactionHandle.INSTANCE, SESSION, new JsonPlaceholderSplit(dataUri.resolve("/posts")), tableHandle, ImmutableList.of(
@@ -76,26 +74,16 @@ public class TestJsonPlaceholderRecordSetProvider
                 .put(9L, "nesciunt iure omnis dolorem tempora et accusantium")
                 .put(10L, "optio molestias id quia eum")
                 .buildOrThrow());
-    }
 
-    @BeforeAll
-    public void setUp()
-    {
-        exampleHttpServer = new JsonPlaceholderHttpServer();
-        dataUri = exampleHttpServer.getUri();
-    }
-
-    @AfterAll
-    public void tearDown()
-    {
-        if (exampleHttpServer != null) {
-            exampleHttpServer.stop();
-        }
+        exampleHttpServer.stop();
     }
 
     @Test
     public void testGetRecordSetForCommentsPost1()
     {
+        JsonPlaceholderHttpServer exampleHttpServer = new JsonPlaceholderHttpServer();
+        URI dataUri = exampleHttpServer.getUri();
+
         ConnectorTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
         JsonPlaceholderRecordSetProvider recordSetProvider = new JsonPlaceholderRecordSetProvider();
         RecordSet recordSet = recordSetProvider.getRecordSet(
@@ -131,11 +119,16 @@ public class TestJsonPlaceholderRecordSetProvider
         }
 
         assertThat(count).isEqualTo(5);
+
+        exampleHttpServer.stop();
     }
 
     @Test
     public void testGetRecordSetForCommentsPost2()
     {
+        JsonPlaceholderHttpServer exampleHttpServer = new JsonPlaceholderHttpServer();
+        URI dataUri = exampleHttpServer.getUri();
+
         ConnectorTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "comments", TupleDomain.all());
         JsonPlaceholderRecordSetProvider recordSetProvider = new JsonPlaceholderRecordSetProvider();
         RecordSet recordSet = recordSetProvider.getRecordSet(
@@ -165,5 +158,7 @@ public class TestJsonPlaceholderRecordSetProvider
                 .put(9L, 2L)
                 .put(10L, 2L)
                 .buildOrThrow());
+
+        exampleHttpServer.stop();
     }
 }

@@ -29,7 +29,7 @@ public class TestJsonPlaceholderClient
     public void testMetadata()
             throws Exception
     {
-        URI apiBaseUri = URI.create("https://jsonplaceholder.typicode.com");
+        URI apiBaseUri = URI.create("https://api.example.local");
         JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
 
         // Test schema discovery
@@ -62,7 +62,7 @@ public class TestJsonPlaceholderClient
     public void testCommentsTableMetadata()
             throws Exception
     {
-        URI apiBaseUri = URI.create("https://jsonplaceholder.typicode.com");
+        URI apiBaseUri = URI.create("https://api.example.local");
         JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
 
         // Test comments table
