@@ -42,15 +42,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class TestCommentsTableDef
 {
     private static final URI BASE_URI = URI.create("https://api.example.local");
-    private final CommentsTableDef commentsTable = new CommentsTableDef(
-            "comments",
-            ImmutableList.of(
-                    new JsonPlaceholderColumn("postid", BIGINT),
-                    new JsonPlaceholderColumn("id", BIGINT),
-                    new JsonPlaceholderColumn("name", createUnboundedVarcharType()),
-                    new JsonPlaceholderColumn("email", createUnboundedVarcharType()),
-                    new JsonPlaceholderColumn("body", createUnboundedVarcharType())),
-            BASE_URI);
+    private final CommentsTableDef commentsTable = new CommentsTableDef(BASE_URI);
 
     @Test
     public void testGetName()

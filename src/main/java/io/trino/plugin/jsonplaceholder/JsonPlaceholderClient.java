@@ -13,7 +13,6 @@
  */
 package io.trino.plugin.jsonplaceholder;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import io.trino.spi.connector.SchemaTableName;
@@ -21,8 +20,6 @@ import io.trino.spi.connector.SchemaTableName;
 import java.net.URI;
 import java.util.Set;
 
-import static io.trino.spi.type.BigintType.BIGINT;
-import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
 import static java.util.Objects.requireNonNull;
 
 public class JsonPlaceholderClient
@@ -41,32 +38,8 @@ public class JsonPlaceholderClient
         URI apiBaseUri = config.getApiBaseUri();
         requireNonNull(apiBaseUri, "apiBaseUri is null");
 
-        // Hardcode the posts table structure
-        this.postsTable = new PostsTableDef(
-                POSTS_TABLE_NAME,
-                ImmutableList.of(
-                        new JsonPlaceholderColumn("userid", BIGINT),
-                        new JsonPlaceholderColumn("id", BIGINT),
-                        new JsonPlaceholderColumn("title", createUnboundedVarcharType()),
-                        new JsonPlaceholderColumn("body", createUnboundedVarcharType())),
-                apiBaseUri);
-
-        // Hardcode the comments table structure with URI template
-        // Note: We use a placeholder string that will be replaced at split time
-        String baseUriString = apiBaseUri.toString();
-        // Remove trailing slash if present to avoid double slashes
-        if (baseUriString.endsWith("/")) {
-            baseUriString = baseUriString.substring(0, baseUriString.length() - 1);
-        }
-        this.commentsTable = new CommentsTableDef(
-                COMMENTS_TABLE_NAME,
-                ImmutableList.of(
-                        new JsonPlaceholderColumn("postid", BIGINT),
-                        new JsonPlaceholderColumn("id", BIGINT),
-                        new JsonPlaceholderColumn("name", createUnboundedVarcharType()),
-                        new JsonPlaceholderColumn("email", createUnboundedVarcharType()),
-                        new JsonPlaceholderColumn("body", createUnboundedVarcharType())),
-                apiBaseUri);
+        this.postsTable = new PostsTableDef(apiBaseUri);
+        this.commentsTable = new CommentsTableDef(apiBaseUri);
     }
 
     public Set<String> getSchemaNames()

@@ -13,12 +13,16 @@
  */
 package io.trino.plugin.jsonplaceholder;
 
+import com.google.common.collect.ImmutableList;
 import io.trino.spi.connector.ColumnHandle;
+import io.trino.spi.connector.ColumnMetadata;
 import io.trino.spi.connector.ConnectorSession;
 import io.trino.spi.connector.ConnectorSplit;
 import io.trino.spi.connector.ConnectorTableHandle;
+import io.trino.spi.connector.ConnectorTableMetadata;
 import io.trino.spi.connector.Constraint;
 import io.trino.spi.connector.ConstraintApplicationResult;
+import io.trino.spi.connector.SchemaTableName;
 import io.trino.spi.predicate.TupleDomain;
 
 import java.net.URI;
@@ -27,15 +31,53 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static io.trino.spi.type.BigintType.BIGINT;
+import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
+import static java.util.Objects.requireNonNull;
+
 public class PostsTableDef
-        extends AbstractJsonPlaceholderTable
+        implements TableDef
 {
-    public PostsTableDef(
-            String name,
-            List<JsonPlaceholderColumn> columns,
-            URI baseUri)
+    private static final String TABLE_NAME = "posts";
+    private static final List<JsonPlaceholderColumn> COLUMNS = ImmutableList.of(
+            new JsonPlaceholderColumn("userid", BIGINT),
+            new JsonPlaceholderColumn("id", BIGINT),
+            new JsonPlaceholderColumn("title", createUnboundedVarcharType()),
+            new JsonPlaceholderColumn("body", createUnboundedVarcharType()));
+
+    private final URI baseUri;
+
+    public PostsTableDef(URI baseUri)
     {
-        super(name, columns, baseUri);
+        this.baseUri = requireNonNull(baseUri, "baseUri is null");
+    }
+
+    @Override
+    public String getName()
+    {
+        return TABLE_NAME;
+    }
+
+    @Override
+    public List<JsonPlaceholderColumn> getColumns()
+    {
+        return COLUMNS;
+    }
+
+    @Override
+    public List<ColumnMetadata> getColumnsMetadata()
+    {
+        ImmutableList.Builder<ColumnMetadata> columnsMetadata = ImmutableList.builder();
+        for (JsonPlaceholderColumn column : COLUMNS) {
+            columnsMetadata.add(column.asMetadata());
+        }
+        return columnsMetadata.build();
+    }
+
+    @Override
+    public ConnectorTableMetadata asMetadata(String schema)
+    {
+        return new ConnectorTableMetadata(new SchemaTableName(schema, TABLE_NAME), getColumnsMetadata());
     }
 
     @Override

@@ -36,14 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class TestPostsTableDef
 {
     private static final URI BASE_URI = URI.create("https://api.example.local");
-    private final PostsTableDef postsTable = new PostsTableDef(
-            "posts",
-            ImmutableList.of(
-                    new JsonPlaceholderColumn("userid", BIGINT),
-                    new JsonPlaceholderColumn("id", BIGINT),
-                    new JsonPlaceholderColumn("title", createUnboundedVarcharType()),
-                    new JsonPlaceholderColumn("body", createUnboundedVarcharType())),
-            BASE_URI);
+    private final PostsTableDef postsTable = new PostsTableDef(BASE_URI);
 
     @Test
     public void testGetName()
