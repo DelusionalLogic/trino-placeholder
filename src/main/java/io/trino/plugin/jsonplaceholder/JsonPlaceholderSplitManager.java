@@ -94,7 +94,7 @@ public class JsonPlaceholderSplitManager
 
             log.warning(format("DynamicFilter has resolved (awaitable %s) (constraint %s)", filter.isAwaitable(), filter.getCurrentPredicate()));
 
-            JsonPlaceholderTable table = client.getTable(tableHandle);
+            TableDef table = client.getTable(tableHandle);
             if (table == null) {
                 throw new TableNotFoundException(tableHandle.toSchemaTableName());
             }

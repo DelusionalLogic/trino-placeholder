@@ -78,7 +78,7 @@ public class JsonPlaceholderMetadata
             return null;
         }
 
-        JsonPlaceholderTable table = exampleClient.getTable(tableName);
+        TableDef table = exampleClient.getTable(tableName);
         if (table == null) {
             return null;
         }
@@ -112,7 +112,7 @@ public class JsonPlaceholderMetadata
     {
         JsonPlaceholderTableHandle exampleTableHandle = (JsonPlaceholderTableHandle) tableHandle;
 
-        JsonPlaceholderTable table = exampleClient.getTable(exampleTableHandle);
+        TableDef table = exampleClient.getTable(exampleTableHandle);
         if (table == null) {
             throw new TableNotFoundException(exampleTableHandle.toSchemaTableName());
         }
@@ -142,7 +142,7 @@ public class JsonPlaceholderMetadata
 
     private ConnectorTableMetadata getTableMetadata(SchemaTableName tableName)
     {
-        JsonPlaceholderTable table = exampleClient.getTable(tableName);
+        TableDef table = exampleClient.getTable(tableName);
         if (table == null) {
             return null;
         }
@@ -171,7 +171,7 @@ public class JsonPlaceholderMetadata
             Constraint constraint)
     {
         JsonPlaceholderTableHandle tableHandle = (JsonPlaceholderTableHandle) handle;
-        JsonPlaceholderTable table = exampleClient.getTable(tableHandle);
+        TableDef table = exampleClient.getTable(tableHandle);
 
         if (table == null) {
             throw new TableNotFoundException(tableHandle.toSchemaTableName());

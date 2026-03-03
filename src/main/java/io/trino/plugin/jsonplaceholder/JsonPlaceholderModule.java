@@ -18,8 +18,6 @@ import com.google.inject.Module;
 import com.google.inject.Scopes;
 
 import static io.airlift.configuration.ConfigBinder.configBinder;
-import static io.airlift.json.JsonCodec.listJsonCodec;
-import static io.airlift.json.JsonCodecBinder.jsonCodecBinder;
 
 public class JsonPlaceholderModule
         implements Module
@@ -33,7 +31,5 @@ public class JsonPlaceholderModule
         binder.bind(JsonPlaceholderSplitManager.class).in(Scopes.SINGLETON);
         binder.bind(JsonPlaceholderRecordSetProvider.class).in(Scopes.SINGLETON);
         configBinder(binder).bindConfig(JsonPlaceholderConfig.class);
-
-        jsonCodecBinder(binder).bindMapJsonCodec(String.class, listJsonCodec(JsonPlaceholderTable.class));
     }
 }

@@ -13,19 +13,15 @@
  */
 package io.trino.plugin.jsonplaceholder;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.trino.plugin.jsonplaceholder.filter.FilterType;
 import io.trino.spi.TrinoException;
 import io.trino.spi.connector.ColumnHandle;
-import io.trino.spi.connector.ColumnMetadata;
 import io.trino.spi.connector.ConnectorSession;
 import io.trino.spi.connector.ConnectorSplit;
 import io.trino.spi.connector.ConnectorTableHandle;
-import io.trino.spi.connector.ConnectorTableMetadata;
 import io.trino.spi.connector.Constraint;
 import io.trino.spi.connector.ConstraintApplicationResult;
-import io.trino.spi.connector.SchemaTableName;
 import io.trino.spi.predicate.Domain;
 import io.trino.spi.predicate.TupleDomain;
 
@@ -35,56 +31,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.trino.spi.StandardErrorCode.INVALID_ROW_FILTER;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 
-public class JsonPlaceholderTable
-        implements TableDef
+public class CommentsTableDef
+        extends AbstractJsonPlaceholderTable
 {
-    private final String name;
-    private final List<JsonPlaceholderColumn> columns;
-    private final URI baseUri;
-
-    public JsonPlaceholderTable(
+    public CommentsTableDef(
             String name,
             List<JsonPlaceholderColumn> columns,
             URI baseUri)
     {
-        checkArgument(!isNullOrEmpty(name), "name is null or is empty");
-        this.name = requireNonNull(name, "name is null");
-        this.columns = ImmutableList.copyOf(requireNonNull(columns, "columns is null"));
-        this.baseUri = baseUri;
-    }
-
-    @Override
-    public String getName()
-    {
-        return name;
-    }
-
-    @Override
-    public List<JsonPlaceholderColumn> getColumns()
-    {
-        return columns;
-    }
-
-    @Override
-    public List<ColumnMetadata> getColumnsMetadata()
-    {
-        ImmutableList.Builder<ColumnMetadata> columnsMetadata = ImmutableList.builder();
-        for (JsonPlaceholderColumn column : this.columns) {
-            columnsMetadata.add(column.asMetadata());
-        }
-        return columnsMetadata.build();
-    }
-
-    @Override
-    public ConnectorTableMetadata asMetadata(String schema)
-    {
-        return new ConnectorTableMetadata(new SchemaTableName(schema, name), getColumnsMetadata());
+        super(name, columns, baseUri);
     }
 
     @Override
@@ -92,25 +50,19 @@ public class JsonPlaceholderTable
     {
         List<ConnectorSplit> splits = new ArrayList<>();
 
-        // Handle URI templates for comments table
-        if (name.equals("comments")) {
-            var postIdColumn = columns.get("postid");
+        var postIdColumn = columns.get("postid");
 
-            if (!tableConstraint.getDomains().isPresent()) {
-                throw new TrinoException(INVALID_ROW_FILTER, "Missing required filter: postid");
-            }
-
-            Domain domain = tableConstraint.getDomains().get().get(postIdColumn);
-            if (domain == null) {
-                throw new TrinoException(INVALID_ROW_FILTER, "Missing required filter: postid");
-            }
-
-            for (var id : domain.getValues().tryExpandRanges(1024).get()) {
-                splits.add(new JsonPlaceholderSplit(baseUri.resolve(format("/posts/%d/comments", id))));
-            }
+        if (!tableConstraint.getDomains().isPresent()) {
+            throw new TrinoException(INVALID_ROW_FILTER, "Missing required filter: postid");
         }
-        else {
-            splits.add(new JsonPlaceholderSplit(baseUri.resolve("/posts")));
+
+        Domain domain = tableConstraint.getDomains().get().get(postIdColumn);
+        if (domain == null) {
+            throw new TrinoException(INVALID_ROW_FILTER, "Missing required filter: postid");
+        }
+
+        for (var id : domain.getValues().tryExpandRanges(1024).get()) {
+            splits.add(new JsonPlaceholderSplit(baseUri.resolve(format("/posts/%d/comments", id))));
         }
 
         return splits;
@@ -124,10 +76,6 @@ public class JsonPlaceholderTable
             Map<String, ColumnHandle> columns,
             Constraint constraint)
     {
-        if (!name.equals("comments")) {
-            return Optional.empty();
-        }
-
         TupleDomain<ColumnHandle> summary = constraint.getSummary();
         if (summary.isAll() || summary.getDomains().isEmpty()) {
             return Optional.empty();

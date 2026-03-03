@@ -31,8 +31,8 @@ public class JsonPlaceholderClient
     private static final String POSTS_TABLE_NAME = "posts";
     private static final String COMMENTS_TABLE_NAME = "comments";
 
-    private final JsonPlaceholderTable postsTable;
-    private final JsonPlaceholderTable commentsTable;
+    private final TableDef postsTable;
+    private final TableDef commentsTable;
 
     @Inject
     public JsonPlaceholderClient(JsonPlaceholderConfig config)
@@ -42,7 +42,7 @@ public class JsonPlaceholderClient
         requireNonNull(apiBaseUri, "apiBaseUri is null");
 
         // Hardcode the posts table structure
-        this.postsTable = new JsonPlaceholderTable(
+        this.postsTable = new PostsTableDef(
                 POSTS_TABLE_NAME,
                 ImmutableList.of(
                         new JsonPlaceholderColumn("userid", BIGINT),
@@ -58,7 +58,7 @@ public class JsonPlaceholderClient
         if (baseUriString.endsWith("/")) {
             baseUriString = baseUriString.substring(0, baseUriString.length() - 1);
         }
-        this.commentsTable = new JsonPlaceholderTable(
+        this.commentsTable = new CommentsTableDef(
                 COMMENTS_TABLE_NAME,
                 ImmutableList.of(
                         new JsonPlaceholderColumn("postid", BIGINT),
@@ -83,17 +83,17 @@ public class JsonPlaceholderClient
         return ImmutableSet.of(POSTS_TABLE_NAME, COMMENTS_TABLE_NAME);
     }
 
-    public JsonPlaceholderTable getTable(JsonPlaceholderTableHandle handle)
+    public TableDef getTable(JsonPlaceholderTableHandle handle)
     {
         return getTable(handle.getSchemaName(), handle.getTableName());
     }
 
-    public JsonPlaceholderTable getTable(SchemaTableName name)
+    public TableDef getTable(SchemaTableName name)
     {
         return getTable(name.getSchemaName(), name.getTableName());
     }
 
-    public JsonPlaceholderTable getTable(String schema, String tableName)
+    public TableDef getTable(String schema, String tableName)
     {
         requireNonNull(schema, "schema is null");
         requireNonNull(tableName, "tableName is null");

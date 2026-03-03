@@ -42,7 +42,7 @@ public class TestJsonPlaceholderClient
         assertThat(client.getTableNames("unknown")).isEqualTo(ImmutableSet.of());
 
         // Test posts table
-        JsonPlaceholderTable table = client.getTable("default", "posts");
+        TableDef table = client.getTable("default", "posts");
         assertThat(table)
                 .describedAs("table is null")
                 .isNotNull();
@@ -66,7 +66,7 @@ public class TestJsonPlaceholderClient
         JsonPlaceholderClient client = new JsonPlaceholderClient(new JsonPlaceholderConfig().setApiBaseUri(apiBaseUri));
 
         // Test comments table
-        JsonPlaceholderTable table = client.getTable("default", "comments");
+        TableDef table = client.getTable("default", "comments");
         assertThat(table).isNotNull();
         assertThat(table.getColumns()).hasSize(5);
         assertThat(table.getColumns().stream().map(JsonPlaceholderColumn::getName))

@@ -22,10 +22,8 @@ import io.airlift.json.ObjectMapperProvider;
 import io.trino.spi.type.StandardTypes;
 import io.trino.spi.type.Type;
 
-import java.util.List;
 import java.util.Map;
 
-import static io.airlift.json.JsonCodec.listJsonCodec;
 import static io.trino.spi.type.BigintType.BIGINT;
 import static io.trino.spi.type.BooleanType.BOOLEAN;
 import static io.trino.spi.type.DoubleType.DOUBLE;
@@ -37,16 +35,12 @@ public final class MetadataUtil
 {
     private MetadataUtil() {}
 
-    public static final JsonCodec<Map<String, List<JsonPlaceholderTable>>> CATALOG_CODEC;
-    public static final JsonCodec<JsonPlaceholderTable> TABLE_CODEC;
     public static final JsonCodec<JsonPlaceholderColumnHandle> COLUMN_CODEC;
 
     static {
         ObjectMapperProvider objectMapperProvider = new ObjectMapperProvider();
         objectMapperProvider.setJsonDeserializers(ImmutableMap.of(Type.class, new TestingTypeDeserializer()));
         JsonCodecFactory codecFactory = new JsonCodecFactory(objectMapperProvider);
-        CATALOG_CODEC = codecFactory.mapJsonCodec(String.class, listJsonCodec(JsonPlaceholderTable.class));
-        TABLE_CODEC = codecFactory.jsonCodec(JsonPlaceholderTable.class);
         COLUMN_CODEC = codecFactory.jsonCodec(JsonPlaceholderColumnHandle.class);
     }
 
