@@ -27,7 +27,7 @@ public class TestJsonPlaceholderTable
 {
     private final JsonPlaceholderTable exampleTable = new JsonPlaceholderTable("tableName",
             ImmutableList.of(new JsonPlaceholderColumn("a", createUnboundedVarcharType()), new JsonPlaceholderColumn("b", BIGINT)),
-            ImmutableList.of(URI.create("file://table-1.json"), URI.create("file://table-2.json")));
+            URI.create("file://table-1.json"));
 
     @Test
     public void testColumnMetadata()

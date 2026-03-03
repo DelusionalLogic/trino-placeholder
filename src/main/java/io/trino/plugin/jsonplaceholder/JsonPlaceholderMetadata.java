@@ -17,7 +17,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
-import io.trino.plugin.jsonplaceholder.filter.FilterType;
 import io.trino.spi.TrinoException;
 import io.trino.spi.connector.ColumnHandle;
 import io.trino.spi.connector.ColumnMetadata;
@@ -32,7 +31,6 @@ import io.trino.spi.connector.SchemaTableName;
 import io.trino.spi.connector.SchemaTablePrefix;
 import io.trino.spi.connector.TableColumnsMetadata;
 import io.trino.spi.connector.TableNotFoundException;
-import io.trino.spi.predicate.Domain;
 import io.trino.spi.predicate.TupleDomain;
 
 import java.util.Iterator;
@@ -43,7 +41,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import static io.trino.spi.StandardErrorCode.NOT_SUPPORTED;
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class JsonPlaceholderMetadata
@@ -173,73 +170,14 @@ public class JsonPlaceholderMetadata
             ConnectorTableHandle handle,
             Constraint constraint)
     {
-        JsonPlaceholderTableHandle table = (JsonPlaceholderTableHandle) handle;
+        JsonPlaceholderTableHandle tableHandle = (JsonPlaceholderTableHandle) handle;
+        JsonPlaceholderTable table = exampleClient.getTable(tableHandle);
 
-        if (!table.getTableName().equals("comments")) {
-            return Optional.empty();
+        if (table == null) {
+            throw new TableNotFoundException(tableHandle.toSchemaTableName());
         }
 
         Map<String, ColumnHandle> columns = getColumnHandles(session, handle);
-
-        log.warning(format("applyFilter %s", constraint));
-        TupleDomain<ColumnHandle> summary = constraint.getSummary();
-        if (summary.isAll() || summary.getDomains().isEmpty()) {
-            return Optional.empty();
-        }
-
-        TupleDomain<ColumnHandle> currentConstraint = table.getConstraint();
-        Map<String, FilterType> supportedFilters = ImmutableMap.of("postid", FilterType.EQUAL);
-
-        boolean found = false;
-        for (Map.Entry<String, FilterType> entry : supportedFilters.entrySet()) {
-            String columnName = entry.getKey();
-
-            ColumnHandle columnHandle = columns.get(columnName);
-            if (columnHandle == null) {
-                continue;
-            }
-
-            if (!summary.getDomains().isPresent()) {
-                continue;
-            }
-
-            Domain domain = summary.getDomains().get().get(columnHandle);
-            if (domain == null) {
-                continue;
-            }
-
-            // Create constraint for this column
-            TupleDomain<ColumnHandle> newConstraint = TupleDomain.withColumnDomains(
-                    Map.of(columnHandle, domain));
-
-            // Check if this constraint is already applied
-            if (currentConstraint.getDomains().isPresent() &&
-                    currentConstraint.getDomains().get().containsKey(columnHandle)) {
-                Domain currentDomain = currentConstraint.getDomains().get().get(columnHandle);
-                if (currentDomain.equals(domain)) {
-                    throw new AssertionError("Constraint was already applied");
-                }
-            }
-
-            currentConstraint = currentConstraint.intersect(newConstraint);
-
-            found = true;
-
-            // Remove from remaining constraints
-            summary = summary.filter((ch, d) -> !ch.equals(columnHandle));
-        }
-
-        if (!found) {
-            return Optional.empty();
-        }
-
-        return Optional.of(new ConstraintApplicationResult<>(
-                    new JsonPlaceholderTableHandle(
-                        table.getSchemaName(),
-                        table.getTableName(),
-                        currentConstraint),
-                    summary,
-                    constraint.getExpression(),
-                    false));
+        return table.applyFilter(session, this, tableHandle, columns, constraint);
     }
 }

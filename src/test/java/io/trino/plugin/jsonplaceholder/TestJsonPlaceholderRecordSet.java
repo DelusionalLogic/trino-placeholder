@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.parallel.Execution;
 
+import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -37,7 +38,7 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 public class TestJsonPlaceholderRecordSet
 {
     private JsonPlaceholderHttpServer exampleHttpServer;
-    private String dataUri;
+    private URI dataUri;
 
     @Test
     public void testGetColumnTypes()
@@ -171,7 +172,7 @@ public class TestJsonPlaceholderRecordSet
     public void setUp()
     {
         exampleHttpServer = new JsonPlaceholderHttpServer();
-        dataUri = exampleHttpServer.resolve("/jsonplaceholder-data/posts.json").toString();
+        dataUri = exampleHttpServer.getUri().resolve("/posts");
     }
 
     @AfterAll

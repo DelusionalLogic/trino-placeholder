@@ -56,9 +56,9 @@ public class JsonPlaceholderHttpServer
         lifeCycleManager.stop();
     }
 
-    public URI resolve(String s)
+    public URI getUri()
     {
-        return baseUri.resolve(s);
+        return baseUri;
     }
 
     private static class ExampleHttpServerModule

@@ -52,7 +52,7 @@ public class TestJsonPlaceholderSplitManager
     {
         httpServer = new JsonPlaceholderHttpServer();
         JsonPlaceholderConfig config = new JsonPlaceholderConfig()
-                .setApiBaseUri(httpServer.resolve("/"));
+                .setApiBaseUri(httpServer.getUri());
         client = new JsonPlaceholderClient(config);
         meta = new JsonPlaceholderMetadata(client);
         splitManager = new JsonPlaceholderSplitManager(client, meta);
@@ -80,7 +80,7 @@ public class TestJsonPlaceholderSplitManager
         List<ConnectorSplit> splits = splitSource.getNextBatch(10).get().getSplits();
         assertThat(splits).hasSize(1);
         JsonPlaceholderSplit split = (JsonPlaceholderSplit) splits.get(0);
-        assertThat(split.getUri()).contains("/posts");
+        assertThat(split.getUri().getPath()).contains("/posts");
     }
 
     @Test
@@ -105,7 +105,7 @@ public class TestJsonPlaceholderSplitManager
         List<ConnectorSplit> splits = splitSource.getNextBatch(10).get().getSplits();
         assertThat(splits).hasSize(1);
         JsonPlaceholderSplit split = (JsonPlaceholderSplit) splits.get(0);
-        assertThat(split.getUri()).contains("/posts/1/comments");
+        assertThat(split.getUri().getPath()).contains("/posts/1/comments");
     }
 
     @Test

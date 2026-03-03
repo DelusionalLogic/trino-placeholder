@@ -21,7 +21,6 @@ import io.trino.spi.connector.RecordSet;
 import io.trino.spi.type.Type;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -45,7 +44,7 @@ public class JsonPlaceholderRecordSet
         this.columnTypes = types.build();
 
         try {
-            byteSource = Resources.asByteSource(URI.create(split.getUri()).toURL());
+            byteSource = Resources.asByteSource(split.getUri().toURL());
         }
         catch (MalformedURLException e) {
             throw new RuntimeException(e);

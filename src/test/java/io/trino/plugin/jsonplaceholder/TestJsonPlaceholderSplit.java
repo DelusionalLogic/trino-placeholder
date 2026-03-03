@@ -18,33 +18,35 @@ import io.airlift.json.JsonCodec;
 import io.trino.spi.HostAddress;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
+
 import static io.airlift.json.JsonCodec.jsonCodec;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TestJsonPlaceholderSplit
 {
-    private final JsonPlaceholderSplit split = new JsonPlaceholderSplit("http://127.0.0.1/test.file");
+    private final JsonPlaceholderSplit split = new JsonPlaceholderSplit(URI.create("http://127.0.0.1/test.file"));
 
     @Test
     public void testAddresses()
     {
         // http split with default port
-        JsonPlaceholderSplit httpSplit = new JsonPlaceholderSplit("http://example.com/example");
+        JsonPlaceholderSplit httpSplit = new JsonPlaceholderSplit(URI.create("http://example.com/example"));
         assertThat(httpSplit.getAddresses()).isEqualTo(ImmutableList.of(HostAddress.fromString("example.com")));
         assertThat(httpSplit.isRemotelyAccessible()).isEqualTo(true);
 
         // http split with custom port
-        httpSplit = new JsonPlaceholderSplit("http://example.com:8080/example");
+        httpSplit = new JsonPlaceholderSplit(URI.create("http://example.com:8080/example"));
         assertThat(httpSplit.getAddresses()).isEqualTo(ImmutableList.of(HostAddress.fromParts("example.com", 8080)));
         assertThat(httpSplit.isRemotelyAccessible()).isEqualTo(true);
 
         // http split with default port
-        JsonPlaceholderSplit httpsSplit = new JsonPlaceholderSplit("https://example.com/example");
+        JsonPlaceholderSplit httpsSplit = new JsonPlaceholderSplit(URI.create("https://example.com/example"));
         assertThat(httpsSplit.getAddresses()).isEqualTo(ImmutableList.of(HostAddress.fromString("example.com")));
         assertThat(httpsSplit.isRemotelyAccessible()).isEqualTo(true);
 
         // http split with custom port
-        httpsSplit = new JsonPlaceholderSplit("https://example.com:8443/example");
+        httpsSplit = new JsonPlaceholderSplit(URI.create("https://example.com:8443/example"));
         assertThat(httpsSplit.getAddresses()).isEqualTo(ImmutableList.of(HostAddress.fromParts("example.com", 8443)));
         assertThat(httpsSplit.isRemotelyAccessible()).isEqualTo(true);
     }

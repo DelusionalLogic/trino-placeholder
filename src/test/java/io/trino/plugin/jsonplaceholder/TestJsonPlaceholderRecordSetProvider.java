@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.parallel.Execution;
 
+import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -40,16 +41,14 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 public class TestJsonPlaceholderRecordSetProvider
 {
     private JsonPlaceholderHttpServer exampleHttpServer;
-    private String dataUri;
-    private String commentsPost1Uri;
-    private String commentsPost2Uri;
+    private URI dataUri;
 
     @Test
     public void testGetRecordSet()
     {
         ConnectorTableHandle tableHandle = new JsonPlaceholderTableHandle("default", "posts", TupleDomain.all());
         JsonPlaceholderRecordSetProvider recordSetProvider = new JsonPlaceholderRecordSetProvider();
-        RecordSet recordSet = recordSetProvider.getRecordSet(JsonPlaceholderTransactionHandle.INSTANCE, SESSION, new JsonPlaceholderSplit(dataUri), tableHandle, ImmutableList.of(
+        RecordSet recordSet = recordSetProvider.getRecordSet(JsonPlaceholderTransactionHandle.INSTANCE, SESSION, new JsonPlaceholderSplit(dataUri.resolve("/posts")), tableHandle, ImmutableList.of(
                 new JsonPlaceholderColumnHandle("id", BIGINT),
                 new JsonPlaceholderColumnHandle("title", createUnboundedVarcharType())));
         assertThat(recordSet)
@@ -79,17 +78,11 @@ public class TestJsonPlaceholderRecordSetProvider
                 .buildOrThrow());
     }
 
-    //
-    // Start http server for testing
-    //
-
     @BeforeAll
     public void setUp()
     {
         exampleHttpServer = new JsonPlaceholderHttpServer();
-        dataUri = exampleHttpServer.resolve("/jsonplaceholder-data/posts.json").toString();
-        commentsPost1Uri = exampleHttpServer.resolve("/posts/1/comments").toString();
-        commentsPost2Uri = exampleHttpServer.resolve("/posts/2/comments").toString();
+        dataUri = exampleHttpServer.getUri();
     }
 
     @AfterAll
@@ -108,7 +101,7 @@ public class TestJsonPlaceholderRecordSetProvider
         RecordSet recordSet = recordSetProvider.getRecordSet(
                 JsonPlaceholderTransactionHandle.INSTANCE,
                 SESSION,
-                new JsonPlaceholderSplit(commentsPost1Uri),
+                new JsonPlaceholderSplit(dataUri.resolve("/posts/1/comments")),
                 tableHandle,
                 ImmutableList.of(
                         new JsonPlaceholderColumnHandle("postid", BIGINT),
@@ -148,7 +141,7 @@ public class TestJsonPlaceholderRecordSetProvider
         RecordSet recordSet = recordSetProvider.getRecordSet(
                 JsonPlaceholderTransactionHandle.INSTANCE,
                 SESSION,
-                new JsonPlaceholderSplit(commentsPost2Uri),
+                new JsonPlaceholderSplit(dataUri.resolve("/posts/2/comments")),
                 tableHandle,
                 ImmutableList.of(
                         new JsonPlaceholderColumnHandle("postid", BIGINT),

@@ -52,7 +52,6 @@ public class TestJsonPlaceholderClient
                 new JsonPlaceholderColumn("id", BIGINT),
                 new JsonPlaceholderColumn("title", createUnboundedVarcharType()),
                 new JsonPlaceholderColumn("body", createUnboundedVarcharType())));
-        assertThat(table.getSources()).isEqualTo(ImmutableList.of(apiBaseUri.resolve("/posts")));
 
         // Test getting unknown table returns null
         assertThat(client.getTable("default", "unknown")).isNull();

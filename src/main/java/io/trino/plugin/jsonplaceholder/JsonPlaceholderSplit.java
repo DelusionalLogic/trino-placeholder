@@ -33,21 +33,19 @@ public class JsonPlaceholderSplit
 {
     private static final int INSTANCE_SIZE = instanceSize(JsonPlaceholderSplit.class);
 
-    private final String uri;
-    private final boolean remotelyAccessible;
+    private final URI uri;
     private final List<HostAddress> addresses;
 
     @JsonCreator
-    public JsonPlaceholderSplit(@JsonProperty("uri") String uri)
+    public JsonPlaceholderSplit(@JsonProperty("uri") URI uri)
     {
         this.uri = requireNonNull(uri, "uri is null");
 
-        remotelyAccessible = true;
-        addresses = ImmutableList.of(HostAddress.fromUri(URI.create(uri)));
+        addresses = ImmutableList.of(HostAddress.fromUri(uri));
     }
 
     @JsonProperty
-    public String getUri()
+    public URI getUri()
     {
         return uri;
     }
@@ -55,8 +53,7 @@ public class JsonPlaceholderSplit
     @Override
     public boolean isRemotelyAccessible()
     {
-        // only http or https is remotely accessible
-        return remotelyAccessible;
+        return true;
     }
 
     @Override
@@ -70,7 +67,6 @@ public class JsonPlaceholderSplit
     {
         return toStringHelper(this)
                 .add("uri", uri)
-                .add("remotelyAccessible", remotelyAccessible)
                 .add("addresses", addresses.stream().map(HostAddress::toString).collect(joining(",")))
                 .toString();
     }
@@ -79,7 +75,6 @@ public class JsonPlaceholderSplit
     public long getRetainedSizeInBytes()
     {
         return INSTANCE_SIZE
-                + estimatedSizeOf(uri)
                 + estimatedSizeOf(addresses, HostAddress::getRetainedSizeInBytes);
     }
 }

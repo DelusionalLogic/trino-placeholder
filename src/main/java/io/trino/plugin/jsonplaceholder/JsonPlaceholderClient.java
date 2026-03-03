@@ -49,7 +49,7 @@ public class JsonPlaceholderClient
                         new JsonPlaceholderColumn("id", BIGINT),
                         new JsonPlaceholderColumn("title", createUnboundedVarcharType()),
                         new JsonPlaceholderColumn("body", createUnboundedVarcharType())),
-                ImmutableList.of(apiBaseUri.resolve("/posts")));
+                apiBaseUri);
 
         // Hardcode the comments table structure with URI template
         // Note: We use a placeholder string that will be replaced at split time
@@ -66,7 +66,7 @@ public class JsonPlaceholderClient
                         new JsonPlaceholderColumn("name", createUnboundedVarcharType()),
                         new JsonPlaceholderColumn("email", createUnboundedVarcharType()),
                         new JsonPlaceholderColumn("body", createUnboundedVarcharType())),
-                ImmutableList.of(URI.create(baseUriString + "/posts/__POSTID__/comments")));
+                apiBaseUri);
     }
 
     public Set<String> getSchemaNames()

@@ -92,4 +92,12 @@ public final class JsonPlaceholderTableHandle
     {
         return schemaName + ":" + tableName + ":" + constraint;
     }
+
+    public JsonPlaceholderTableHandle withConstraint(TupleDomain<ColumnHandle> newConstraint)
+    {
+        return new JsonPlaceholderTableHandle(
+                schemaName,
+                tableName,
+                newConstraint);
+    }
 }
